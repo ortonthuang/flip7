@@ -158,9 +158,9 @@
   .center-area { grid-column: 2; grid-row: 3; }
 
   /* STUDENT PLAYER PANELS */
-  .bekah-panel { grid-column: 1; grid-row: 2; }
+  .bekah-panel { grid-column: 1; grid-row: 2; margin-top: 3.5rem; }
   .katie-panel  { grid-column: 2; grid-row: 2; }
-  .mary-panel   { grid-column: 3; grid-row: 2; }
+  .mary-panel   { grid-column: 3; grid-row: 2; margin-top: 3.5rem; }
 
   /* SCOREBOARD + CONTROLS */
   .scoreboard { grid-column: 1 / 4; grid-row: 1; }
@@ -172,6 +172,19 @@
     border-radius: 12px;
     padding: 1rem;
     backdrop-filter: blur(10px);
+    transition: background 0.5s ease, border-color 0.5s ease;
+  }
+  .student-panel.is-busted {
+    background: rgba(80, 5, 5, 0.85) !important;
+    border-color: rgba(232,85,85,0.7) !important;
+  }
+  .student-panel.is-frozen {
+    background: rgba(8, 30, 70, 0.8) !important;
+    border-color: rgba(85,153,255,0.65) !important;
+  }
+  .student-panel.is-active {
+    background: rgba(201,168,76,0.07) !important;
+    border-color: rgba(201,168,76,0.6) !important;
   }
 
   .student-name-row {
@@ -206,15 +219,15 @@
     align-items: flex-start;
   }
 
-  /* Medium cards for student players — slightly smaller so 7 fit */
+  /* Student player cards — smaller than human hand cards */
   .card-med {
-    width: 46px;
-    height: 64px;
-    font-size: 1.35rem;
-    border-radius: 6px;
+    width: 40px;
+    height: 54px;
+    font-size: 1.1rem;
+    border-radius: 5px;
   }
-  .card-med .card-icon { font-size: 1.05rem; }
-  .card-med .card-label { font-size: 0.38rem; }
+  .card-med .card-icon { font-size: 0.9rem; }
+  .card-med .card-label { font-size: 0.32rem; }
 
   /* ACTIVE CARD DISPLAY */
   .drawn-card-area {
@@ -257,6 +270,9 @@
   .card.special-freeze { background: #e8f0ff; border-color: #7099dd; color: #1a3080; }
   .card.special-flip3  { background: #f5e8ff; border-color: #aa66dd; color: #550088; }
   .card.modifier-card  { background: #fff3e0; border-color: #ff9800; color: #7a3800; font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 700; }
+  .card.bust-card      { background: #ffe8e8; border-color: #e85555; color: #cc0000; outline: 2px solid #e85555; outline-offset: -1px; font-family: 'Bebas Neue', cursive; font-size: 2.2rem; box-shadow: 0 0 8px rgba(232,85,85,0.4); }
+  .card.bust-card.card-med { font-size: 1.35rem; }
+  .card.bust-card.card-big { font-size: 3.2rem; }
   .card.modifier-card.card-big { font-size: 2.2rem; }
   .mini-card.modifier-mini { background: #fff3e0; border-color: #ff9800; color: #7a3800; font-size: 0.65rem; font-weight: 700; }
 
@@ -293,6 +309,15 @@
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .player-section.is-busted {
+    background: rgba(80, 5, 5, 0.85) !important;
+    border-color: rgba(232,85,85,0.7) !important;
+  }
+  .player-section.is-frozen {
+    background: rgba(8, 30, 70, 0.8) !important;
+    border-color: rgba(85,153,255,0.65) !important;
   }
 
   .player-name {
@@ -317,7 +342,9 @@
   .player-meta .status { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; }
   .status.active { background: rgba(57,255,110,0.15); color: var(--neon-green); border: 1px solid rgba(57,255,110,0.3); }
   .status.bust { background: rgba(232,85,85,0.15); color: var(--bust); border: 1px solid rgba(232,85,85,0.3); }
-  .status.safe { background: rgba(85,153,255,0.15); color: var(--frozen); border: 1px solid rgba(85,153,255,0.3); }
+  .status.safe   { background: rgba(85,153,255,0.15); color: var(--frozen); border: 1px solid rgba(85,153,255,0.3); }
+  .status.frozen { background: rgba(85,153,255,0.15); color: var(--frozen); border: 1px solid rgba(85,153,255,0.3); }
+  .status.held   { background: rgba(85,153,255,0.12); color: #aaccff;       border: 1px solid rgba(85,153,255,0.25); }
   .status.waiting { background: rgba(122,158,138,0.15); color: var(--text-muted); border: 1px solid rgba(122,158,138,0.2); }
 
   .hand-cards {
@@ -465,27 +492,40 @@
   /* SCOREBOARD */
   .score-grid {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
 
   .score-card {
     flex: 1;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(201,168,76,0.15);
-    border-radius: 6px;
-    padding: 0.35rem 0.6rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.7rem;
   }
   .score-card.leader {
-    border-color: rgba(201,168,76,0.5);
-    background: rgba(201,168,76,0.07);
+    border-color: rgba(201,168,76,0.6);
+    background: rgba(201,168,76,0.1);
+    box-shadow: 0 0 12px rgba(201,168,76,0.12);
   }
 
-  .score-name { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.05em; white-space: nowrap; }
+  .score-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
   .score-card.leader .score-name { color: var(--gold); }
-  .score-points { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; color: var(--text-light); margin-left: auto; }
+  .score-points {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--text-light);
+    margin-left: auto;
+  }
   .score-card.leader .score-points { color: var(--gold); }
   .score-wins { display: none; }
 
@@ -561,7 +601,7 @@
 
   textarea.code-input {
     width: 100%;
-    min-height: 260px;
+    min-height: 420px;
     background: transparent;
     border: none;
     color: #a8ffb8;
@@ -598,6 +638,11 @@
     letter-spacing: 0.05em;
   }
   .btn-test:hover { background: rgba(57,255,110,0.2); border-color: rgba(57,255,110,0.4); }
+  @keyframes test-flash {
+    0%   { background: rgba(57,255,110,0.5); border-color: var(--neon-green); }
+    100% { background: rgba(57,255,110,0.12); border-color: rgba(57,255,110,0.25); }
+  }
+  .btn-test.flashing { animation: test-flash 0.6s ease-out; }
 
   .code-status {
     font-family: 'DM Mono', monospace;
@@ -614,63 +659,111 @@
   .code-status.ok { color: var(--neon-green); background: rgba(57,255,110,0.08); }
   .code-status.err { color: var(--bust); background: rgba(232,85,85,0.08); }
 
-  /* ROUND RESULT OVERLAY */
+  /* ROUND RESULT — centered modal overlay */
   .round-result {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.78);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 500;
     backdrop-filter: blur(4px);
+    padding: 1rem;
   }
   .round-result.show { display: flex; }
   .result-card {
-    background: rgba(8,24,14,0.98);
+    background: rgba(6,22,11,0.98);
     border: 2px solid var(--gold);
     border-radius: 16px;
-    padding: 2.5rem 3.5rem;
-    text-align: center;
-    max-width: 480px;
-    width: 90%;
+    padding: 1.8rem 2.2rem;
+    width: min(96vw, 1200px);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
   }
   .result-title {
     font-family: 'Bebas Neue', cursive;
-    font-size: 3rem;
-    letter-spacing: 0.2em;
+    font-size: 1.8rem;
+    letter-spacing: 0.15em;
     color: var(--gold);
-    margin-bottom: 0.5rem;
+    white-space: nowrap;
   }
   .result-winner {
     font-family: 'Bebas Neue', cursive;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     color: var(--neon-green);
-    letter-spacing: 0.15em;
-    margin-bottom: 1.5rem;
+    letter-spacing: 0.08em;
   }
+  .result-actions { display: flex; gap: 0.6rem; align-items: center; margin-left: auto; }
+
   .result-scores {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
-    justify-content: center;
-    margin-bottom: 2rem;
   }
   .result-score-item {
-    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
   }
-  .result-score-item .rsname {
+  .result-score-item.winner-score {
+    border-color: rgba(201,168,76,0.5);
+    background: rgba(201,168,76,0.07);
+  }
+  .result-score-item.busted-score { border-color: rgba(232,85,85,0.3); opacity: 0.75; }
+  .rsname {
     font-family: 'DM Mono', monospace;
     font-size: 0.7rem;
     color: var(--text-muted);
-    margin-bottom: 4px;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
   }
-  .result-score-item .rsval {
+  .result-score-item.winner-score .rsname { color: var(--gold); }
+  .rsval {
     font-family: 'Bebas Neue', cursive;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: var(--text-light);
+    line-height: 1;
   }
   .result-score-item.winner-score .rsval { color: var(--gold); }
+  .rs-round-pts {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--neon-green);
+    margin-top: 2px;
+  }
+  .rs-cards { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; align-items: center; }
+
+  /* Tiny result cards */
+  .card-tiny {
+    width: 26px; height: 36px;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: #1a2a1a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-direction: column;
+    font-family: 'Bebas Neue', cursive;
+  }
+  .card-tiny.t-second { background:#fff8e8;border-color:#e8c94c;color:#7a5a00;font-size:0.5rem; }
+  .card-tiny.t-freeze { background:#e8f0ff;border-color:#7099dd;color:#1a3080;font-size:0.55rem; }
+  .card-tiny.t-flip3  { background:#f5e8ff;border-color:#aa66dd;color:#550088;font-size:0.55rem; }
+  .card-tiny.t-mod    { background:#fff3e0;border-color:#ff9800;color:#7a3800;font-size:0.5rem;font-weight:700;font-family:'DM Mono',monospace; }
+  .card-tiny.t-bust   { background:#fff0f0;border-color:#e85555;color:#cc0000;outline:2px solid #e85555; }
+  .comma-sep { font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--text-muted);line-height:36px; }
 
   /* PHASE INDICATOR */
   .phase-banner {
@@ -917,8 +1010,8 @@
 
     <div class="code-box active" id="code-box-0">
       <div class="code-meta">
-        <span>Player: <span class="player-tag" id="ai-name-display-0">AI_1</span></span>
-        <span>def flip_card(hand, all_hands, cards) → bool</span>
+        <span>Player: <span class="player-tag" id="ai-name-display-0">Bekah</span></span>
+        <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
       </div>
       <textarea class="code-input" id="code-0" spellcheck="false" placeholder="# Paste Student 1's flip_card implementation here
 # Return True to flip a card, False to hold
@@ -935,11 +1028,12 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
+    <pre id="debug-0" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
 
     <div class="code-box" id="code-box-1">
       <div class="code-meta">
         <span>Player: <span class="player-tag" id="ai-name-display-1">Katie</span></span>
-        <span>def flip_card(hand, all_hands, cards) → bool</span>
+        <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
       </div>
       <textarea class="code-input" id="code-1" spellcheck="false" placeholder="# Paste Student 2's flip_card implementation here
 
@@ -955,11 +1049,12 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
+    <pre id="debug-1" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
 
     <div class="code-box" id="code-box-2">
       <div class="code-meta">
         <span>Player: <span class="player-tag" id="ai-name-display-2">Mary</span></span>
-        <span>def flip_card(hand, all_hands, cards) → bool</span>
+        <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
       </div>
       <textarea class="code-input" id="code-2" spellcheck="false" placeholder="# Paste Student 3's flip_card implementation here
 
@@ -975,6 +1070,7 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
+  <pre id="debug-2" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
   </div>
 
   <!-- README -->
@@ -986,7 +1082,7 @@ def flip_card(hand, all_hands, cards):
 
       <!-- flip_card -->
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:1rem 1.2rem;margin-bottom:0.9rem;">
-        <div style="color:var(--neon-green);font-size:0.82rem;margin-bottom:0.5rem;">def flip_card(hand, all_hands, cards) → bool</div>
+        <div style="color:var(--neon-green);font-size:0.82rem;margin-bottom:0.5rem;">def flip_card(hand, all_hands, cards, scores) → bool</div>
         <div style="color:var(--text-muted);margin-bottom:0.7rem;">Called every time it is your turn. Return <span style="color:var(--neon-green);">True</span> to draw a card, <span style="color:var(--bust);">False</span> to hold.</div>
 
         <div style="color:var(--gold);margin-bottom:0.3rem;font-size:0.75rem;">▸ hand — your current hand (dict):</div>
@@ -1017,7 +1113,7 @@ def flip_card(hand, all_hands, cards):
 
       <!-- received_frozen -->
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(85,153,255,0.25);border-radius:8px;padding:1rem 1.2rem;margin-bottom:0.9rem;">
-        <div style="color:#5599ff;font-size:0.82rem;margin-bottom:0.5rem;">def received_frozen(scores) → str</div>
+        <div style="color:#5599ff;font-size:0.82rem;margin-bottom:0.5rem;">def received_frozen(all_hands, scores) → str</div>
         <div style="color:var(--text-muted);margin-bottom:0.7rem;">Called when you draw a <span style="color:#5599ff;">Freeze ❄</span> card. Return the <strong>name</strong> of the player you want to freeze out of this round.</div>
 
         <div style="color:var(--gold);margin-bottom:0.3rem;font-size:0.75rem;">▸ scores — each player's total game score so far (dict):</div>
@@ -1117,15 +1213,18 @@ def flip_card(hand, all_hands, cards):
   </div>
 </div>
 
-<!-- ROUND RESULT OVERLAY -->
+<!-- ROUND RESULT BANNER -->
 <div class="round-result" id="round-result">
   <div class="result-card">
-    <div class="result-title" id="result-title">Round Over</div>
-    <div class="result-winner" id="result-winner"></div>
+    <div class="result-header">
+      <div class="result-title" id="result-title">Round Complete</div>
+      <div class="result-winner" id="result-winner"></div>
+      <div class="result-actions">
+        <button class="btn btn-deal" id="result-next-btn" onclick="closeResult()" style="font-size:0.9rem;padding:0.45rem 1.3rem;">Next Round</button>
+        <button class="btn-new" onclick="newGame()">New Game</button>
+      </div>
+    </div>
     <div class="result-scores" id="result-scores"></div>
-    <button class="btn btn-deal" onclick="closeResult()" style="margin-top:0.5rem;">Next Round</button>
-    &nbsp;
-    <button class="btn-new" onclick="newGame()" style="margin-top:0.5rem;">New Game</button>
   </div>
 </div>
 
@@ -1228,13 +1327,14 @@ function startSimulator(n) {
           // Ask for card?
           let wants;
           if (idx === 0) {
-            // Simulated aggressive AI for player slot 0
-            wants = handTotal(h) < 20 && cardCount(h) < 6;
+            // Player1 AI — uses the shared decision function
+            wants = player1AIDecision(h, deck, played);
           } else {
             const fn = aiFunctions[idx - 1];
             if (!fn) { h._held = true; continue; }
             try {
-              wants = fn(publicHand(h), hands.map(publicHand), Object.assign({}, played));
+              const simScores = {}; names.forEach((nm,si)=>simScores[nm]=scores[si]);
+              wants = fn(publicHand(h), hands.map(publicHand), Object.assign({}, played), simScores);
               wants = wants === true || wants === 1;
             } catch(e) { wants = false; }
           }
@@ -1338,6 +1438,7 @@ let state = {
   scores: [0,0,0,0],
   wins:   [0,0,0,0],
   currentTurnIdx: 0,
+  firstPlayerIdx: 0,  // rotates clockwise each round: 0→1→2→3→0→...
   phase: 'setup',   // 'setup' | 'human_turn' | 'ai_turn' | 'round_end'
 };
 
@@ -1477,6 +1578,7 @@ function dealCardToHand(hand, card) {
         return { busted: false, used_sc: true };
       }
       hand.is_busted = 1;
+      hand._bust_card = card.value;  // remember which card caused the bust
       return { busted: true };
     }
     hand[card.value] = 1;
@@ -1515,26 +1617,45 @@ function getDefaultAI(idx) {
 }
 
 function testCode(idx) {
+  const btn = document.querySelector(`#code-box-${idx} .btn-test`);
+  if (btn) { btn.classList.remove('flashing'); void btn.offsetWidth; btn.classList.add('flashing'); }
   const code     = document.getElementById(`code-${idx}`).value.trim();
   const statusEl = document.getElementById(`status-${idx}`);
+  const ta       = document.getElementById(`code-${idx}`);
   if (!code) { statusEl.textContent = 'empty'; statusEl.className = 'code-status'; return; }
+  // Flash textarea to gray to show testing is happening
+  if (ta) { ta.style.background = 'rgba(160,160,160,0.18)'; ta.style.transition = 'background 0.15s'; }
+  statusEl.textContent = 'testing…';
+  statusEl.className = 'code-status';
   try {
     const fn = compilePythonToJS(code);
     aiFunctions[idx] = fn;
     const testHand = emptyHand('test');
     testHand['3'] = 1; testHand['7'] = 1; testHand['11'] = 1;
     const sampleDeck = buildDeck();
-    const result = fn(publicHand(testHand), [publicHand(testHand)], sampleDeck);
+    const result = fn(publicHand(testHand), [publicHand(testHand)], sampleDeck, {});
     let extra = '';
     if (fn._frozen_fn) extra += ' | received_frozen ✓';
     if (fn._flip3_fn)  extra += ' | received_flip3 ✓';
-    statusEl.textContent = `✓ compiled — test returned: ${result}${extra}`;
+    const ts = new Date().toLocaleTimeString();
+    statusEl.textContent = `✓ loaded ${ts} — test returned: ${result}${extra}`;
     statusEl.className = 'code-status ok';
+    const _dEl=document.getElementById('debug-'+idx); if(_dEl) _dEl.style.display='none';
+    if (ta) { setTimeout(() => { ta.style.background = ''; }, 400); }
   } catch (e) {
-    statusEl.textContent = `✗ ${e.message}`;
-    statusEl.className = 'code-status err';
     aiFunctions[idx] = null;
-    console.error('Compile error for student', idx, ':', e);
+    let debugInfo = '(debug unavailable)';
+    try { debugInfo = compilePythonToJS._debugRun(document.getElementById('code-' + idx).value.trim()); }
+    catch(e2) { debugInfo = 'debug also failed: ' + e2.message; }
+    const debugEl = document.getElementById('debug-' + idx);
+    if (debugEl) {
+      debugEl.style.display = 'block';
+      debugEl.textContent = '== Transpiled JS ==\n' + debugInfo + '\n\n== Error ==\n' + e.message;
+    }
+    if (ta) { setTimeout(() => { ta.style.background = ''; }, 400); }
+    statusEl.textContent = '✗ ' + e.message;
+    statusEl.className = 'code-status err';
+    console.error('Student ' + (idx+1) + ' error:', e.message);
   }
 }
 
@@ -1589,10 +1710,20 @@ function compilePythonToJS(rawCode) {
 
   let js = bodyLines.join('\n');
 
-  // STEP 5: Fix common student Python bug — "var == True/False" used as
-  // assignment. Match only when it is the whole RHS of an assignment-like line.
+  // STEP 5a: Fix "var == True/False" used as assignment (whole-line assignment bug)
   js = js.replace(/^(\s*)(\w+)\s*==\s*(True|False)\s*$/gm,
     (_, sp, v, b) => `${sp}${v} = ${b === 'True' ? 'true' : 'false'}`);
+
+  // STEP 5b: Fix single = inside if/elif conditions (e.g. "if x = 'Katie':")
+  // Replace only inside condition context: if/elif VAR = VALUE
+  js = js.replace(/(if|elif)\s+(\w+)\s*=\s*(?!=)/g, '$1 $2 ==');
+
+  // STEP 5c: Fix "for x, y in dict:" → "for x, y in dict.items():"
+  // (student forgot .items() on a dict iteration)
+  js = js.replace(/for\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g, (m, k, v, obj) => {
+    // Only add .items() if it's not already there and looks like a dict var
+    return `for ${k}, ${v} in ${obj}.items():`;
+  });
 
   // STEP 6: Comprehension & range transforms (before keyword swaps)
 
@@ -1638,6 +1769,18 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\.values\(\)/g,'.values()');
   js = js.replace(/\.append\(([^)]+)\)/g, '.push($1)');
 
+  // STEP 7b: Convert Python-style "for k, v in obj.entries():" to JS for..of
+  // This handles dict iteration with destructuring
+  js = js.replace(
+    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,
+    'for (const [$1, $2] of $3.entries()):'
+  );
+  // Also handle bare "for x, y in obj:" (already got .entries() added in 5c above)
+  js = js.replace(
+    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+([\w.]+)\.entries\(\)\s*:/g,
+    'for (const [$1, $2] of $3.entries()):'
+  );
+
   // STEP 8: Built-in functions
   js = js.replace(/\blen\(([^)]+)\)/g,   '($1).length');
   js = js.replace(/\bint\(([^)]+)\)/g,   'parseInt($1)');
@@ -1647,7 +1790,9 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\bmax\(([^)]+)\)/g,   'Math.max($1)');
   js = js.replace(/\bmin\(([^)]+)\)/g,   'Math.min($1)');
   js = js.replace(/\bprint\s*\([^)]*\)/g,'');
-  js = js.replace(/\.isdigit\(\)/g, '.match(/^\\d+$/)');
+  js = js.replace(/\.isdigit\(\)/g, '.match(/^\\d+$/)/');
+  // Integer division: a // b → Math.floor(a / b)
+  js = js.replace(/(\w+[\w\]"'\)\s]*)\s*\/\/\s*(\w+[\w\[\]"'\s]*)/g, 'Math.floor($1 / $2)');
 
   // STEP 9: Python keywords → JS
   js = js.replace(/\bTrue\b/g,  'true');
@@ -1657,23 +1802,57 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\bor\b/g,    '||');
   js = js.replace(/\bnot\s+([(\w])/g, '!$1');
   js = js.replace(/\belif\s+/g, 'else if ');
+  // 'x in list' → 'list.includes(x)' (only in conditions, not for loops)
+  js = js.replace(/\b(\w+)\s+in\s+(\w+)(?!\s*:)/g, (m,a,b) => b+'.includes('+a+')');
 
   // STEP 10: Indentation → braces
   js = convertIndentToBlocks(js);
 
   // STEP 11: Compile — pre-declare all variable names students commonly use
   const preamble = `var answer=false,pick=false,score=0,points=0,total=0,
-    number=0,count=0,result=false,my_hand=hand,temp=0;`;
-  const fn = new Function('hand','all_hands','cards', `"use strict";\n${preamble}\n${js}`);
+    number=0,count=0,result='',my_hand=hand,temp=0,num_cards=0,most_cards=0,most_name='',name='';`;
+  const fn = new Function('hand','all_hands','cards','scores', `"use strict";\n${preamble}\n${js}`);
   // Smoke test
-  fn(publicHand(emptyHand('smoke')), [publicHand(emptyHand('smoke'))], []);
+  fn(publicHand(emptyHand('smoke')), [publicHand(emptyHand('smoke'))], [], {});
 
   // STEP 12: Also extract received_frozen and received_flip3 if present
-  fn._frozen_fn = extractPythonFn(rawCode, 'received_frozen', ['scores']);
+  fn._frozen_fn = extractPythonFn(rawCode, 'received_frozen', ['all_hands', 'scores']);
   fn._flip3_fn  = extractPythonFn(rawCode, 'received_flip3',  ['all_hands']);
 
   return fn;
 }
+
+// This is the JS code to inject
+compilePythonToJS._debugRun = function(rawCode) {
+  let src = rawCode.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  src = src.replace(/\\\n\s*/g,' ');
+  src = src.replace(/'{3}[\s\S]*?'{3}/g,'').replace(/"{3}[\s\S]*?"{3}/g,'').replace(/#[^\n]*/g,'');
+  const allLines = src.split('\n');
+  let inFunc=false,bodyLines=[],baseIndent='';
+  for (const line of allLines) {
+    if (line.match(/^\s*def\s+flip_card\s*\(/)) { inFunc=true; continue; }
+    if (!inFunc) continue;
+    if (line.trim()==='') { bodyLines.push(''); continue; }
+    if (!baseIndent) { const m=line.match(/^(\s+)/); baseIndent=m?m[1]:'    '; }
+    if (line.startsWith(baseIndent)||line.startsWith('\t')) bodyLines.push(line);
+    else if (line.trim()) break;
+  }
+  if (!bodyLines.length) bodyLines=allLines.filter(l=>!l.match(/^\s*def\s/));
+  let js=bodyLines.join('\n');
+  js=js.replace(/^(\s*)(\w+)\s*==\s*(True|False)\s*$/gm,(_,sp,v,b)=>`${sp}${v} = ${b==='True'?'true':'false'}`);
+  js=js.replace(/\b(if|elif)\s+(\w+)\s*=\s*(?!=)/g,'$1 $2 ==');
+  js=js.replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g,'for $1,$2 in $3.items():');
+  js=js.replace(/([\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)');
+  js=js.replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()');
+  js=js.replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,'for (const [$1,$2] of $3.entries()):');
+  js=js.replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,'for (let $1=0;$1<$2;$1++):');
+  js=js.replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
+  js=js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\s+([(\w])/g,'!$1');
+  js=js.replace(/\belif\s+/g,'else if ').replace(/\blen\(([^)]+)\)/g,'($1).length');
+  js=js.replace(/\bint\(([^)]+)\)/g,'parseInt($1)').replace(/\bstr\(([^)]+)\)/g,'String($1)');
+  js=convertIndentToBlocks(js);
+  return js;
+};
 
 // Extract and compile a named Python function from the same source file
 function extractPythonFn(rawCode, fnName, paramNames) {
@@ -1696,17 +1875,24 @@ function extractPythonFn(rawCode, fnName, paramNames) {
     if (bodyLines.length === 0) return null;
 
     let js = bodyLines.join('\n');
+    // Fix single = in if conditions
+    js = js.replace(/\b(if|elif)\s+(\w+)\s*=\s*(?!=)/g, '$1 $2 ==');
+    // Fix "for k, v in dict:" → add .items()
+    js = js.replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g, 'for $1, $2 in $3.items():');
     js = js
       .replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null')
       .replace(/\band\b/g,'&&').replace(/\bor\b/g,'||')
       .replace(/\bnot\s+([\(\w])/g,'!$1')
       .replace(/\belif\s+/g,'else if ')
+      .replace(/([\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)')
       .replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()')
+      .replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,'for (const [$1,$2] of $3.entries()):')
+      .replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,'for (let $1=0;$1<$2;$1++):')
       .replace(/\blen\(([^)]+)\)/g,'($1).length')
       .replace(/\bint\(([^)]+)\)/g,'parseInt($1)')
       .replace(/\bstr\(([^)]+)\)/g,'String($1)');
     js = convertIndentToBlocks(js);
-    const body = '"use strict";\nvar result=null;\n' + js;
+    const body = '"use strict";\nvar result=\'\',score=0,most_cards=0,most_name=\'\',name=\'\',num_cards=0;\n' + js;
     return new Function(paramNames.join(','), body);
   } catch(e) {
     return null;
@@ -1718,7 +1904,8 @@ function convertIndentToBlocks(code) {
   const result      = [];
   const indentStack = [0];
 
-  for (const rawLine of rawLines) {
+  for (let li = 0; li < rawLines.length; li++) {
+    const rawLine = rawLines[li];
     if (!rawLine.trim()) { result.push(''); continue; }
 
     const curr    = rawLine.match(/^(\s*)/)[1].length;
@@ -1726,13 +1913,15 @@ function convertIndentToBlocks(code) {
 
     // Close any blocks we've dedented out of
     while (curr < indentStack[indentStack.length - 1]) {
-      indentStack.pop();
-      result.push(' '.repeat(indentStack[indentStack.length - 1]) + '}');
+      const closedBodyInd = indentStack.pop();
+      const opInd = (indentStack._openers && indentStack._openers[closedBodyInd] != null)
+        ? indentStack._openers[closedBodyInd]
+        : indentStack[indentStack.length - 1];
+      result.push(' '.repeat(opInd) + '}');
     }
 
-    // Does this line open a block?
-    // It must start with a control keyword AND end with ':'
-    const isControl = /^(if |else if |else:|for |for\s*\(|while |\})/.test(trimmed);
+    // Does this line open a block? Must end with ':' and be a control keyword
+    const isControl = /^(if\b|else if\b|else:|for\b|while\b)/.test(trimmed) || trimmed === 'else:';
     const endsColon = trimmed.endsWith(':');
 
     if (isControl && endsColon) {
@@ -1742,11 +1931,14 @@ function convertIndentToBlocks(code) {
       if (noColon === 'else') {
         jsLine = 'else {';
       } else if (noColon.startsWith('for (')) {
-        // Already JS-style for loop from range() conversion
+        // Already JS-style for loop from range() conversion e.g. "for (let x=0;x<13;x++)"
         jsLine = noColon + ' {';
       } else if (noColon.startsWith('if ') || noColon.startsWith('else if ')) {
         const m = noColon.match(/^(if|else if)\s+(.+)$/);
         jsLine = m ? `${m[1]} (${m[2]}) {` : noColon + ' {';
+      } else if (noColon.startsWith('for ') && noColon.includes(' of ')) {
+        // Already converted for..of: "for (const [k,v] of obj.entries())"
+        jsLine = noColon + ' {';
       } else if (noColon.startsWith('for ')) {
         // Python for..in (non-range) → for..of
         const m = noColon.match(/^for\s+(\w+)\s+in\s+(.+)$/);
@@ -1759,15 +1951,31 @@ function convertIndentToBlocks(code) {
       }
 
       result.push(' '.repeat(curr) + jsLine);
-      indentStack.push(curr + 4);
+
+      // Look ahead to find the ACTUAL indent of the next non-blank body line
+      let bodyIndent = curr + 4; // fallback
+      for (let look = li + 1; look < rawLines.length; look++) {
+        const next = rawLines[look];
+        if (!next.trim()) continue;
+        const nextIndent = next.match(/^(\s*)/)[1].length;
+        if (nextIndent > curr) { bodyIndent = nextIndent; break; }
+        break;
+      }
+      // Store [bodyIndent, openerIndent] so closing brace aligns with opener
+      indentStack.push(bodyIndent);
+      indentStack._openers = indentStack._openers || {};
+      indentStack._openers[bodyIndent] = curr;
     } else {
       result.push(rawLine);
     }
   }
 
   while (indentStack.length > 1) {
-    indentStack.pop();
-    result.push('}');
+    const bodyInd = indentStack.pop();
+    const openerInd = (indentStack._openers && indentStack._openers[bodyInd] != null)
+      ? indentStack._openers[bodyInd]
+      : indentStack[indentStack.length - 1];
+    result.push(' '.repeat(openerInd) + '}');
   }
   return result.join('\n');
 }
@@ -1830,7 +2038,8 @@ function getAIDecision(aiIdx, hand) {
     const cleanHand     = publicHand(hand);
     const cleanAllHands = state.hands.map(publicHand);
     const cardsCopy     = Object.assign({}, state.playedCards);
-    const result        = fn(cleanHand, cleanAllHands, cardsCopy);
+    const scoresCopy    = buildScoresDict();
+    const result        = fn(cleanHand, cleanAllHands, cardsCopy, scoresCopy);
     // true / 1 → wants a card;  false / 0 → hold
     return result === true || result === 1;
   } catch (e) {
@@ -1846,8 +2055,9 @@ function callReceivedFrozen(aiIdx) {
   const fn = aiFunctions[aiIdx];
   if (!fn || !fn._frozen_fn) return null;
   try {
-    const scores = buildScoresDict();
-    return fn._frozen_fn(scores);
+    const scores   = buildScoresDict();
+    const allHands = state.hands.map(publicHand);
+    return fn._frozen_fn(allHands, scores);
   } catch(e) {
     console.warn('received_frozen error:', e.message);
     return null;
@@ -1944,6 +2154,44 @@ function nameToPlayerIdx(name) {
 }
 
 // ============================================================
+// PLAYER 1 AI DECISION FUNCTION
+// Used in both interactive simulator mode and the batch simulator.
+// hand      — the player's current hand object
+// deck      — remaining cards in the deck (array of card objects)
+// played    — playedCards tracker dict {card_value: count_played}
+// Returns true (flip) or false (hold)
+// ============================================================
+function player1AIDecision(hand, deck, played) {
+  const numTotal  = handNumTotal(hand);   // sum of number cards only
+  const numCards  = cardCount(hand);      // count of number cards
+
+  // Rule 1: if number-card total is 30+, hold
+  if (numTotal >= 30) return false;
+
+  // Rule 2: if already have 5+ number cards, keep drawing to chase the 7-card +15 bonus
+  if (numCards >= 5) return true;
+
+  // Rule 3: if holding a 10, 11, or 12 and more than 60% of that card's
+  //         copies remain in the deck, the risk of a duplicate is too high — hold
+  const totalDeckSize = deck.length;
+  if (totalDeckSize > 0) {
+    for (const bigCard of ['10', '11', '12']) {
+      if (hand[bigCard] === 1) {
+        // How many copies of this card exist in total in the original deck?
+        const totalCopies = parseInt(bigCard); // e.g. 12 copies of 12
+        const playedCount = played[bigCard] || 0;
+        const remaining   = totalCopies - playedCount;
+        // If more than 60% of copies are still unplayed, the duplicate risk is high
+        if (remaining / totalCopies > 0.60) return false;
+      }
+    }
+  }
+
+  // Default: draw if total < 30 and fewer than 5 number cards
+  return true;
+}
+
+// ============================================================
 // GAME FLOW
 //
 // CORRECT TURN ROTATION:
@@ -1980,7 +2228,10 @@ function startRound() {
   }
   state.hands          = names.map(n => emptyHand(n));
   state.phase          = 'setup';
-  state.currentTurnIdx = 0;
+  // Clockwise rotation: Player1 → Bekah → Katie → Mary → Player1 → ...
+  state.currentTurnIdx = state.firstPlayerIdx || 0;
+  // Advance for next round
+  state.firstPlayerIdx = ((state.firstPlayerIdx || 0) + 1) % 4;
 
   document.getElementById('round-num').textContent        = state.round;
   document.getElementById('log-entries').innerHTML        = '';
@@ -2029,8 +2280,7 @@ function nextPlayerTick() {
     // ---- Human's turn ----
     state.phase = 'human_turn';
     if (playerMode === 'ai') {
-      const h = state.hands[0];
-      const wants = handTotal(h) < 20 && cardCount(h) < 6;
+      const wants = player1AIDecision(state.hands[0], state.deck, state.playedCards);
       if (!wants) { humanHold(); } else { humanFlip(); }
     } else {
       document.getElementById('flip-hold-area').style.display = 'flex';
@@ -2096,6 +2346,9 @@ function processAIDecision(idx) {
       const targetIdx = nameToPlayerIdx(targetName);
       if (targetIdx >= 0 && !isDone(state.hands[targetIdx])) {
         state.hands[targetIdx]._frozen = true;
+        // Move the freeze card from drawer to target
+        state.hands[idx].freeze = 0;
+        state.hands[targetIdx].freeze = 1;
         const tDisplay = targetIdx === 0 ? 'You' : targetName;
         addLog(`<span class="event-player">${state.playerNames[idx]}</span> froze <span class="event-player">${tDisplay}</span>!`, 'highlight');
         renderAll();
@@ -2109,6 +2362,9 @@ function processAIDecision(idx) {
     resolveFlip3Target(idx, (targetName) => {
       const targetIdx = nameToPlayerIdx(targetName);
       const tDisplay  = targetIdx === 0 ? 'You' : targetName;
+      // Move the flip3 card from drawer to target
+      state.hands[idx].flip_three = 0;
+      if (targetIdx >= 0) state.hands[targetIdx].flip_three = 1;
       addLog(`<span class="event-player">${state.playerNames[idx]}</span> chose to Flip Three on <span class="event-player">${tDisplay}</span>!`, 'highlight');
       if (targetIdx >= 0) {
         applyFlipThree(targetIdx, () => advanceToNextPlayer());
@@ -2162,6 +2418,8 @@ function _doHumanDraw() {
       const targetIdx = nameToPlayerIdx(targetName);
       if (targetIdx >= 0 && !isDone(state.hands[targetIdx])) {
         state.hands[targetIdx]._frozen = true;
+        state.hands[0].freeze = 0;
+        state.hands[targetIdx].freeze = 1;
         const tDisplay = targetIdx === 0 ? 'You' : targetName;
         addLog(`<span class="event-player">You</span> froze <span class="event-player">${tDisplay}</span>!`, 'highlight');
         renderAll();
@@ -2174,6 +2432,8 @@ function _doHumanDraw() {
     resolveFlip3Target(0, (targetName) => {
       const targetIdx = nameToPlayerIdx(targetName);
       const tDisplay  = targetIdx === 0 ? 'You' : targetName;
+      state.hands[0].flip_three = 0;
+      if (targetIdx >= 0) state.hands[targetIdx].flip_three = 1;
       addLog(`<span class="event-player">You</span> chose to Flip Three on <span class="event-player">${tDisplay}</span>!`, 'highlight');
       if (targetIdx >= 0) {
         applyFlipThree(targetIdx, () => advanceToNextPlayer());
@@ -2286,59 +2546,78 @@ function tinyCardHTML(card) {
   return '';
 }
 
+// Render a group of tiny cards with comma separators
+function tinyCardGroup(label, labelColor, cards, bustCards) {
+  if (!cards.length && !bustCards.length) return '';
+  const comma = '<span class="comma-sep">, </span>';
+
+  // Normal cards with commas between them
+  const normalHTML = cards.map((cd, idx) => {
+    const sep = (idx < cards.length - 1 || bustCards.length > 0) ? comma : '';
+    return tinyCardHTML(cd) + sep;
+  }).join('');
+
+  // Bust card(s) shown in red — duplicates of a card already in hand
+  const bustHTML = bustCards.map((bv, idx) => {
+    const sep = idx < bustCards.length - 1 ? comma : '';
+    return `<div class="card-tiny t-bust" title="Duplicate — caused bust">${bv}</div>${sep}`;
+  }).join('');
+
+  return `<div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center;margin-top:4px;">
+    <span style="font-size:0.52rem;color:${labelColor};margin-right:3px;white-space:nowrap;">${label}</span>
+    ${normalHTML}${bustHTML}
+  </div>`;
+}
+
 function buildResultScoresHTML(winnerIdx, pts) {
   return state.playerNames.map((n, i) => {
-    const dn     = i === 0 ? 'You' : n;
-    const h      = state.hands[i] || {};
-    const busted = h.is_busted === 1;
+    const dn      = i === 0 ? 'You' : n;
+    const h       = state.hands[i] || {};
+    const busted  = h.is_busted === 1;
+    const bustCard = h._bust_card || null;
     const winCls  = i === winnerIdx ? 'winner-score' : '';
     const bustCls = busted ? 'busted-score' : '';
-
-    // Separate cards into number, modifier, special — sorted
-    const numCards = CARD_NUMS.filter(k => h[k] === 1).map(k => ({type:'number',value:k}));
-    const modCards = MODIFIERS.filter(k => h[k] === 1).map(k => ({type:'modifier',value:k}));
-    const spCards  = SPECIALS.filter(k => h[k] === 1).map(k => ({type:'special',value:k}));
-
-    // Number cards sorted numerically
-    numCards.sort((a,b) => parseInt(a.value) - parseInt(b.value));
-
-    const numHTML = numCards.length
-      ? '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;">'
-        + '<span style="font-size:0.55rem;color:var(--text-muted);margin-right:2px;">NUMS</span>'
-        + numCards.map(tinyCardHTML).join('') + '</div>'
-      : '';
-    const modHTML = modCards.length
-      ? '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-top:3px;">'
-        + '<span style="font-size:0.55rem;color:#ff9800;margin-right:2px;">MOD</span>'
-        + modCards.map(tinyCardHTML).join('') + '</div>'
-      : '';
-    const spHTML = spCards.length
-      ? '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-top:3px;">'
-        + '<span style="font-size:0.55rem;color:var(--text-muted);margin-right:2px;">SPEC</span>'
-        + spCards.map(tinyCardHTML).join('') + '</div>'
-      : '';
-
-    const noCards = !numCards.length && !modCards.length && !spCards.length;
-    const statusLine = busted
-      ? '<div style="font-family:DM Mono,monospace;font-size:0.62rem;color:var(--bust);margin-top:2px;">BUSTED — 0 pts this round</div>'
-      : (pts[i] > 0
-          ? `<div style="font-family:DM Mono,monospace;font-size:0.62rem;color:var(--neon-green);margin-top:2px;">+${pts[i]} pts this round</div>`
-          : '<div style="font-family:DM Mono,monospace;font-size:0.62rem;color:var(--text-muted);margin-top:2px;">0 pts</div>');
     const isWinner = i === winnerIdx;
 
+    // Number cards sorted numerically (these are the ones they successfully kept)
+    const numCards = CARD_NUMS.filter(k => h[k] === 1).map(k => ({type:'number',value:k}));
+    numCards.sort((a,b) => parseInt(a.value) - parseInt(b.value));
+    const modCards = MODIFIERS.filter(k => h[k] === 1).map(k => ({type:'modifier',value:k}));
+    const spCards  = SPECIALS.filter(k  => h[k] === 1).map(k => ({type:'special', value:k}));
+
+    // Bust duplicate: show the card they already had PLUS the duplicate that killed them
+    const bustDuplicates = bustCard ? [bustCard, bustCard] : [];
+    // Remove one copy from numCards if bust card is there (it was already set to 1)
+    const numCardsForDisplay = bustCard
+      ? numCards.filter(cd => cd.value !== bustCard)
+      : numCards;
+
+    const numGroup = tinyCardGroup('NUMS', 'var(--text-muted)', numCardsForDisplay, bustDuplicates);
+    const modGroup = tinyCardGroup('MOD',  '#ff9800',           modCards,           []);
+    const spGroup  = tinyCardGroup('SPEC', 'var(--text-muted)', spCards,            []);
+    const noCards  = !numCardsForDisplay.length && !modCards.length && !spCards.length && !bustDuplicates.length;
+
+    const hasFlip7 = !busted && cardCount(h) === 7;
+    const statusLine = busted
+      ? `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--bust);margin-top:2px;">BUSTED — drew duplicate ${bustCard} — 0 pts</div>`
+      : (pts[i] > 0
+          ? `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--neon-green);margin-top:2px;">+${pts[i]} pts this round${hasFlip7 ? ' <span style="color:var(--gold);">(incl. +15 Flip 7!)</span>' : ''}</div>`
+          : `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--text-muted);margin-top:2px;">0 pts this round</div>`);
+
     return `<div class="result-score-item ${winCls} ${bustCls}">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
         <div class="rsname" style="font-size:0.75rem;font-weight:500;${isWinner?'color:var(--gold);':''}">${isWinner ? '★ ' : ''}${dn}</div>
         ${busted ? '<span style="background:rgba(232,85,85,0.2);border:1px solid rgba(232,85,85,0.4);border-radius:3px;font-size:0.55rem;color:var(--bust);padding:1px 5px;font-family:DM Mono,monospace;">BUST</span>' : ''}
       </div>
-      <div style="font-family:Bebas Neue,cursive;font-size:1.4rem;line-height:1;color:${isWinner?'var(--gold)':'var(--text-light)'};">${state.scores[i]}</div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:1.4rem;line-height:1;color:${isWinner?'var(--gold)':'var(--text-light)'};">${state.scores[i]}</div>
       ${statusLine}
       <div style="margin-top:5px;border-top:1px solid rgba(255,255,255,0.06);padding-top:5px;">
-        ${noCards ? '<span style="font-size:0.58rem;color:var(--text-muted);">no cards</span>' : numHTML + modHTML + spHTML}
+        ${noCards ? '<span style="font-size:0.58rem;color:var(--text-muted);">no cards</span>' : numGroup + modGroup + spGroup}
       </div>
     </div>`;
   }).join('');
 }
+
 
 function showRoundResult(winnerIdx, pts) {
   const wd = winnerIdx === 0 ? 'You' : state.playerNames[winnerIdx];
@@ -2372,18 +2651,20 @@ function newGame() {
   state.scores      = [0,0,0,0];
   state.wins        = [0,0,0,0];
   state.round       = 0;
+  state.firstPlayerIdx = 0;
   state.phase       = 'setup';
   state.hands       = [];
   state.deck        = [];          // reset so next startRound builds a fresh deck
   state.playedCards = emptyPlayedCards ? emptyPlayedCards() : {};
   document.getElementById('human-hand').innerHTML        = '';
+  const _hs = document.getElementById('human-section'); if (_hs) _hs.classList.remove('is-busted','is-frozen');
   ['bekah','katie','mary'].forEach(n => {
     const el = document.getElementById(n+'-hand');
     if (el) el.innerHTML = '<span style="color:var(--text-muted);font-size:0.75rem;font-family:DM Mono,monospace">—</span>';
     const sc = document.getElementById(n+'-score'); if (sc) sc.textContent = '0';
     const tt = document.getElementById(n+'-total'); if (tt) tt.textContent = '—';
     const st = document.getElementById(n+'-status'); if (st) { st.textContent='waiting'; st.className='status waiting'; }
-    const sec = document.getElementById(n+'-section'); if (sec) { sec.style.borderColor=''; sec.style.background=''; }
+    const sec = document.getElementById(n+'-section'); if (sec) { sec.style.borderColor=''; sec.style.background=''; sec.classList.remove('is-busted','is-frozen','is-active'); }
   });
   document.getElementById('log-entries').innerHTML       = '';
   playerMode = 'choose';
@@ -2417,15 +2698,18 @@ function cardHTML(card, extraClass = '', isNew = false) {
     inner = card.value;
   } else if (card.value === 'second_chance') {
     typeClass = 'special-second';
-    inner = `<span class="card-icon">★</span><span class="card-label">2nd</span>`;
+    inner = `<span style="font-size:1.4em;line-height:1;">♥</span><span class="card-label" style="font-size:0.45em;font-family:'DM Mono',monospace;margin-top:1px;">2nd</span>`;
   } else if (card.value === 'freeze') {
     typeClass = 'special-freeze';
-    inner = `<span class="card-icon">❄</span><span class="card-label">FRZ</span>`;
+    inner = `<span style="font-family:'DM Mono',monospace;font-size:0.5em;font-weight:700;letter-spacing:0.05em;line-height:1.1;text-align:center;">❄<br>Freeze</span>`;
   } else if (card.value === 'flip_three') {
     typeClass = 'special-flip3';
-    inner = `<span class="card-icon">⚡</span><span class="card-label">×3</span>`;
+    inner = `<span style="font-family:'DM Mono',monospace;font-size:0.42em;font-weight:700;letter-spacing:0.02em;line-height:1.1;text-align:center;">⚡<br>Flip<br>Three</span>`;
   } else if (card.type === 'modifier') {
     typeClass = 'modifier-card';
+    inner = card.value;
+  } else if (card.type === 'bust') {
+    typeClass = 'bust-card';
     inner = card.value;
   }
   return `<div class="card ${typeClass} ${extraClass}${newCls}">${inner}</div>`;
@@ -2433,9 +2717,11 @@ function cardHTML(card, extraClass = '', isNew = false) {
 
 function handToCards(hand) {
   const cards = [];
-  CARD_NUMS.forEach(k    => { if (hand[k] === 1) cards.push({ type: 'number',   value: k }); });
+  CARD_NUMS.forEach(k  => { if (hand[k] === 1) cards.push({ type: 'number',   value: k }); });
   MODIFIERS.forEach(k  => { if (hand[k] === 1) cards.push({ type: 'modifier', value: k }); });
   SPECIALS.forEach(k   => { if (hand[k] === 1) cards.push({ type: 'special',  value: k }); });
+  // Append the bust card (duplicate) in red at the end so it shows on the mat
+  if (hand._bust_card) cards.push({ type: 'bust', value: hand._bust_card });
   return cards;
 }
 
@@ -2450,6 +2736,16 @@ function renderHumanHand() {
       : `<span style="color:var(--text-muted);font-size:0.8rem;font-family:'DM Mono',monospace;align-self:center;">No cards yet</span>`;
   const total = handTotal(hand);
   document.getElementById('human-total').textContent = total > 0 ? total : '—';
+  // Sync status badge and bust styling
+  const humanSection = document.getElementById('human-section');
+  if (state.hands[0] && state.phase !== 'human_turn' && state.phase !== 'setup') {
+    if      (isBusted(hand))  { updateHumanStatus('bust');   if (humanSection) { humanSection.classList.add('is-busted'); humanSection.classList.remove('is-frozen'); } }
+    else if (hand._frozen)    { updateHumanStatus('frozen'); if (humanSection) { humanSection.classList.add('is-frozen'); humanSection.classList.remove('is-busted'); } }
+    else if (hand._held)      { updateHumanStatus('held');   if (humanSection) { humanSection.classList.remove('is-busted', 'is-frozen'); } }
+    else                      {                               if (humanSection) { humanSection.classList.remove('is-busted', 'is-frozen'); } }
+  } else if (humanSection) {
+    humanSection.classList.remove('is-busted');
+  }
 }
 
 function renderAIPlayers() {
@@ -2477,11 +2773,22 @@ function renderAIPlayers() {
       else                      { statusEl.textContent = 'waiting';statusEl.className = 'status waiting'; }
     }
 
-    // Section highlight
+    // Section highlight — set inline styles directly (most reliable)
     const section = document.getElementById(sectionId);
     if (section) {
-      section.style.borderColor = isActiveTurn ? 'rgba(201,168,76,0.6)' : '';
-      section.style.background  = isActiveTurn ? 'rgba(201,168,76,0.06)' : '';
+      if (isBusted(hand)) {
+        section.style.background   = 'rgba(100, 5, 5, 0.85)';
+        section.style.borderColor  = 'rgba(232, 85, 85, 0.8)';
+      } else if (hand._frozen) {
+        section.style.background   = 'rgba(8, 30, 90, 0.82)';
+        section.style.borderColor  = 'rgba(85, 153, 255, 0.7)';
+      } else if (isActiveTurn) {
+        section.style.background   = 'rgba(201, 168, 76, 0.08)';
+        section.style.borderColor  = 'rgba(201, 168, 76, 0.6)';
+      } else {
+        section.style.background   = '';
+        section.style.borderColor  = '';
+      }
     }
 
     document.getElementById(scoreId).textContent = state.scores[idx];
@@ -2582,6 +2889,29 @@ function updateAIName(idx) {
 // ============================================================
 // INIT
 // ============================================================
+// Tab key inserts 4 spaces in code textareas instead of losing focus
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Tab' && e.target.classList.contains('code-input')) {
+    e.preventDefault();
+    const ta    = e.target;
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    if (e.shiftKey) {
+      // Shift-Tab: remove up to 4 spaces before cursor on the current line
+      const before = ta.value.substring(0, start);
+      const spaces = before.match(/ {1,4}$/);
+      if (spaces) {
+        ta.value = before.slice(0, -spaces[0].length) + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start - spaces[0].length;
+      }
+    } else {
+      // Tab: insert 4 spaces
+      ta.value = ta.value.substring(0, start) + '    ' + ta.value.substring(end);
+      ta.selectionStart = ta.selectionEnd = start + 4;
+    }
+  }
+});
+
 window.onload = () => {
   const sampleDeck = buildDeck();
   document.getElementById('deck-count').textContent = sampleDeck.length;
@@ -2589,7 +2919,7 @@ window.onload = () => {
   addLog('Cards: 1×0, 1×1, 2×2 … 12×12, plus specials & 6 modifier cards', '');
   updateScoreboard();
   // Set default starter code for all three students
-  const defaultCode = `def flip_card(hand, all_hands, cards):
+  const defaultCode = `def flip_card(hand, all_hands, cards, scores):
     points = 0
     for x in range(13):
         points += hand[str(x)] * x
@@ -2598,7 +2928,7 @@ window.onload = () => {
     else:
         return True
 
-def received_frozen(scores):
+def received_frozen(all_hands, scores):
     return "Mary"
 
 def received_flip3(all_hands):
