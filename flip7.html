@@ -158,9 +158,9 @@
   .center-area { grid-column: 2; grid-row: 3; }
 
   /* STUDENT PLAYER PANELS */
-  .bekah-panel { grid-column: 1; grid-row: 2; margin-top: 3.5rem; }
+  .bekah-panel { grid-column: 1; grid-row: 2; margin-top: 4rem; }
   .katie-panel  { grid-column: 2; grid-row: 2; }
-  .mary-panel   { grid-column: 3; grid-row: 2; margin-top: 3.5rem; }
+  .mary-panel   { grid-column: 3; grid-row: 2; margin-top: 4rem; }
 
   /* SCOREBOARD + CONTROLS */
   .scoreboard { grid-column: 1 / 4; grid-row: 1; }
@@ -551,7 +551,10 @@
   .toast.show { transform: translateX(-50%) translateY(0); }
 
   /* CODE EDITOR */
-  .code-section { grid-column: 1 / 4; grid-row: 4; }
+  .code-section       { grid-column: 1 / 3; grid-row: 4; display: flex; flex-direction: column; align-self: stretch; }
+  .test-data-section  { grid-column: 3;     grid-row: 4; display: flex; flex-direction: column; align-self: stretch; }
+  .console-section    { grid-column: 1 / 4; grid-row: 5; }
+  .readme-section     { grid-column: 1 / 4; grid-row: 6; }
 
   .code-tabs {
     display: flex;
@@ -585,8 +588,10 @@
     border: 1px solid rgba(201,168,76,0.25);
     border-radius: 0 8px 8px 8px;
     padding: 1.2rem;
+    flex: 1;
+    flex-direction: column;
   }
-  .code-box.active { display: block; }
+  .code-box.active { display: flex; }
 
   .code-meta {
     display: flex;
@@ -601,7 +606,7 @@
 
   textarea.code-input {
     width: 100%;
-    min-height: 420px;
+    min-height: 380px;
     background: transparent;
     border: none;
     color: #a8ffb8;
@@ -656,7 +661,8 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .code-status.ok { color: var(--neon-green); background: rgba(57,255,110,0.08); }
+  .code-status.ok   { color: var(--neon-green); background: rgba(57,255,110,0.08); }
+  .code-status.warn { color: #ffaa44;           background: rgba(255,170,68,0.08); }
   .code-status.err { color: var(--bust); background: rgba(232,85,85,0.08); }
 
   /* ROUND RESULT — centered modal overlay */
@@ -878,6 +884,82 @@
   }
   .btn-pick .pick-stats span { color: var(--text-light); }
 
+
+  /* TEST RESULTS CONSOLE */
+  .test-console-section { grid-column: 1 / 4; grid-row: 6; }
+
+  .console-window {
+    background: #030e05;
+    border: 1px solid rgba(57,255,110,0.2);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    min-height: 600px;
+    max-height: 600px;
+    overflow-y: auto;
+    color: #a8ffb8;
+  }
+  .console-window::-webkit-scrollbar { width: 4px; }
+  .console-window::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  .console-line { margin: 0; white-space: pre-wrap; word-break: break-all; }
+  .console-line.header  { color: var(--gold); border-bottom: 1px solid rgba(201,168,76,0.2); margin-bottom: 4px; padding-bottom: 2px; }
+  .console-line.label   { color: #88ccff; }
+  .console-line.ok      { color: var(--neon-green); }
+  .console-line.warn    { color: #ffaa44; }
+  .console-line.err     { color: var(--bust); }
+  .console-line.dim     { color: var(--text-muted); }
+  .console-line.result  { color: #ffee88; font-weight: 600; }
+  .console-separator    { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 6px 0; }
+
+  .code-editor-wrap {
+    display: flex;
+    flex-direction: row;
+    background: transparent;
+    border-radius: 4px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .line-numbers {
+    min-width: 38px;
+    width: 38px;
+    flex-shrink: 0;
+    padding: 0.4rem 0.4rem 0.4rem 0.2rem;
+    background: rgba(255,255,255,0.03);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: rgba(122,158,138,0.4);
+    text-align: right;
+    user-select: none;
+    pointer-events: none;
+    white-space: pre;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    align-self: stretch;
+  }
+  .ln-error {
+    background: rgba(232,85,85,0.4);
+    color: #ff8888 !important;
+    border-radius: 2px;
+    display: block;
+  }
+  /* textarea inside editor-wrap: fills remaining space */
+  .code-editor-wrap textarea.code-input {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    background: transparent;
+    border: none;
+    resize: none;
+    padding: 0.4rem 0.6rem;
+    margin: 0;
+    border-radius: 0;
+  }
+
 </style>
 </head>
 <body>
@@ -999,27 +1081,38 @@
     <div id="log-entries"></div>
   </div>
 
-  <!-- CODE EDITOR SECTION -->
-  <div class="code-section panel">
-    <div class="panel-title">Student Implementations</div>
-    <div class="code-tabs">
-      <div class="code-tab active" onclick="switchTab(0)">Bekah</div>
-      <div class="code-tab" onclick="switchTab(1)">Katie</div>
-      <div class="code-tab" onclick="switchTab(2)">Mary</div>
-    </div>
+</div>
 
-    <div class="code-box active" id="code-box-0">
+<div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 2rem;display:flex;flex-direction:column;gap:1rem;">
+
+
+  <!-- ROW 1: STUDENT IMPLEMENTATIONS + TEST DATA (side by side) -->
+  <div style="display:flex;flex-direction:row;gap:1rem;align-items:flex-start;">
+
+    <!-- LEFT: STUDENT IMPLEMENTATIONS -->
+    <div style="flex:1;min-width:0;">
+      <div class="panel">
+        <div class="panel-title">Student Implementations</div>
+        <div class="code-tabs">
+          <div class="code-tab active" onclick="switchTab(0)">Bekah</div>
+          <div class="code-tab" onclick="switchTab(1)">Katie</div>
+          <div class="code-tab" onclick="switchTab(2)">Mary</div>
+        </div>
+<div class="code-box active" id="code-box-0">
       <div class="code-meta">
         <span>Player: <span class="player-tag" id="ai-name-display-0">Bekah</span></span>
         <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
       </div>
-      <textarea class="code-input" id="code-0" spellcheck="false" placeholder="# Paste Student 1's flip_card implementation here
+      <div class="code-editor-wrap" id="editor-wrap-0">
+        <div class="line-numbers" id="line-nums-0">1</div>
+        <textarea class="code-input" id="code-0" spellcheck="false" oninput="updateLineNumbers(0)" onscroll="syncScroll(0)" placeholder="# Paste Student 1's flip_card implementation here
 # Return True to flip a card, False to hold
 
 def flip_card(hand, all_hands, cards):
     # Example: always flip if total < 15
     total = sum(v for k, v in hand.items() if k.isdigit() and v == 1 and int(k) > 0)
     return total < 15"></textarea>
+      </div><!-- /editor-wrap-0 -->
       <div class="code-toolbar">
         <button class="btn-test" onclick="testCode(0)">▶ Test and Load Code</button>
         <div class="code-status" id="status-0">ready</div>
@@ -1028,19 +1121,28 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
-    <pre id="debug-0" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
+    <div id="debug-wrap-0" style="display:none;margin-top:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px;">
+      <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#ff8888;">⚠ Transpiler output</span>
+      <button onclick="document.getElementById('debug-wrap-0').style.display='none';" style="margin-left:auto;background:transparent;border:1px solid rgba(232,85,85,0.3);color:#ff8888;font-size:0.6rem;padding:1px 6px;border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;">✕ close</button>
+    </div>
+    <pre id="debug-0" style="background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:'DM Mono',monospace;margin:0;"></pre>
+  </div>
 
     <div class="code-box" id="code-box-1">
       <div class="code-meta">
         <span>Player: <span class="player-tag" id="ai-name-display-1">Katie</span></span>
         <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
       </div>
-      <textarea class="code-input" id="code-1" spellcheck="false" placeholder="# Paste Student 2's flip_card implementation here
+      <div class="code-editor-wrap" id="editor-wrap-1">
+        <div class="line-numbers" id="line-nums-1">1</div>
+        <textarea class="code-input" id="code-1" spellcheck="false" oninput="updateLineNumbers(1)" onscroll="syncScroll(1)" placeholder="# Paste Student 2's flip_card implementation here
 
 def flip_card(hand, all_hands, cards):
     # Example: aggressive — keep flipping until close to bust
     card_count = sum(1 for k, v in hand.items() if v == 1 and not hand.get('is_busted'))
     return card_count < 6"></textarea>
+      </div><!-- /editor-wrap-1 -->
       <div class="code-toolbar">
         <button class="btn-test" onclick="testCode(1)">▶ Test and Load Code</button>
         <div class="code-status" id="status-1">ready</div>
@@ -1049,19 +1151,28 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
-    <pre id="debug-1" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
+    <div id="debug-wrap-1" style="display:none;margin-top:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px;">
+      <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#ff8888;">⚠ Transpiler output</span>
+      <button onclick="document.getElementById('debug-wrap-1').style.display='none';" style="margin-left:auto;background:transparent;border:1px solid rgba(232,85,85,0.3);color:#ff8888;font-size:0.6rem;padding:1px 6px;border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;">✕ close</button>
+    </div>
+    <pre id="debug-1" style="background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:'DM Mono',monospace;margin:0;"></pre>
+  </div>
 
     <div class="code-box" id="code-box-2">
       <div class="code-meta">
         <span>Player: <span class="player-tag" id="ai-name-display-2">Mary</span></span>
         <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
       </div>
-      <textarea class="code-input" id="code-2" spellcheck="false" placeholder="# Paste Student 3's flip_card implementation here
+      <div class="code-editor-wrap" id="editor-wrap-2">
+        <div class="line-numbers" id="line-nums-2">1</div>
+        <textarea class="code-input" id="code-2" spellcheck="false" oninput="updateLineNumbers(2)" onscroll="syncScroll(2)" placeholder="# Paste Student 3's flip_card implementation here
 
 def flip_card(hand, all_hands, cards):
     # Example: conservative — hold if have 4+ cards
     card_count = sum(1 for k, v in hand.items() if k not in ['is_busted','owner','second_chance','freeze','flip_three'] and v == 1)
     return card_count < 4"></textarea>
+      </div><!-- /editor-wrap-2 -->
       <div class="code-toolbar">
         <button class="btn-test" onclick="testCode(2)">▶ Test and Load Code</button>
         <div class="code-status" id="status-2">ready</div>
@@ -1069,12 +1180,77 @@ def flip_card(hand, all_hands, cards):
           Name: <input type="text" id="ai-name-2" value="Mary" oninput="updateAIName(2)" style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.2);color:var(--gold);padding:3px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.72rem;width:90px;outline:none;">
         </label>
       </div>
+        </div>
     </div>
-  <pre id="debug-2" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
+  <div id="debug-wrap-2" style="display:none;margin-top:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px;">
+      <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#ff8888;">⚠ Transpiler output</span>
+      <button onclick="document.getElementById('debug-wrap-2').style.display='none';" style="margin-left:auto;background:transparent;border:1px solid rgba(232,85,85,0.3);color:#ff8888;font-size:0.6rem;padding:1px 6px;border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;">✕ close</button>
+    </div>
+    <pre id="debug-2" style="background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:'DM Mono',monospace;margin:0;"></pre>
+  </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TEST DATA -->
+    </div>
   </div>
 
-  <!-- README -->
+  <!-- ROW 2: TEST RESULTS CONSOLE -->
+  <!-- TEST RESULTS CONSOLE -->
+<!-- ROW 2: TEST RESULTS CONSOLE -->
+  <!-- TEST RESULTS CONSOLE -->
   <div style="grid-column:1/4;grid-row:5;background:var(--panel);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:1.2rem;backdrop-filter:blur(10px);">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;">
+      <div class="panel-title" style="margin-bottom:0;">💻 Test Results Console</div>
+      <button class="btn-new" onclick="clearTestConsole()" style="padding:0.25rem 0.8rem;font-size:0.65rem;margin-left:auto;">Clear</button>
+    </div>
+    <div class="console-window" id="test-console">
+      <p class="console-line dim">— Run "Test and Load Code" on any student tab to see results here —</p>
+    </div>
+  </div>
+
+  <!-- ROW 3: TEST INPUT DATA -->
+  <div style="display:flex;flex-direction:row;gap:0.6rem;">
+<!-- TEST DATA: 3 panels side-by-side -->
+    <div style="display:flex;flex-direction:row;gap:0.6rem;flex:1;min-width:0;align-items:flex-start;">
+
+      <!-- Panel 1: hand -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;">hand</div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.57rem;margin-bottom:4px;">Your hand. 1=have card, 0=don't.</div>
+        <textarea id="test-hand" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Panel 2: all_hands -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;">all_hands</div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.57rem;margin-bottom:4px;">All 4 players' hands. [Player1, Bekah, Katie, Mary]</div>
+        <textarea id="test-all-hands" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Panel 3: scores + cards -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:4px;">
+          <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;">scores &amp; cards</div>
+          <button class="btn-new" onclick="randomizeTestData()" style="margin-left:auto;padding:0.15rem 0.6rem;font-size:0.58rem;">↺ Randomize</button>
+        </div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.57rem;margin-bottom:2px;">scores: name → total pts</div>
+        <textarea id="test-scores" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;" spellcheck="false"></textarea>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.57rem;margin-top:0.5rem;margin-bottom:2px;">cards: drawn since last shuffle</div>
+        <textarea id="test-cards" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;" spellcheck="false"></textarea>
+      </div>
+
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ROW 4: STUDENT API REFERENCE -->
+  <!-- README -->
+<!-- ROW 3: STUDENT API REFERENCE -->
+  <!-- README -->
+  <div style="grid-column:1/4;grid-row:6;background:var(--panel);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:1.2rem;backdrop-filter:blur(10px);">
     <div class="panel-title">📖 Student API Reference</div>
     <div style="font-family:'DM Mono',monospace;font-size:0.78rem;line-height:1.7;color:var(--text-light);">
 
@@ -1163,6 +1339,10 @@ def flip_card(hand, all_hands, cards):
     </div>
   </div>
 
+
+</div>
+
+</div>
 
 </div>
 
@@ -1297,105 +1477,187 @@ function startSimulator(n) {
   const totals  = [0, 0, 0, 0];   // total score across all games
 
   for (let g = 0; g < n; g++) {
-    const scores = [0, 0, 0, 0];
-    let deck     = buildDeck();
-    let played   = emptyPlayedCards();
+    const gameScores = [0, 0, 0, 0];
+    let deck   = buildDeck();
+    let played = emptyPlayedCards();
 
     function simDraw() {
       if (deck.length === 0) { deck = buildDeck(); played = emptyPlayedCards(); }
       const card = deck.pop();
-      const key  = card.value;
-      played[key] = (played[key] || 0) + 1;
+      played[card.value] = (played[card.value] || 0) + 1;
       return card;
     }
 
-    let round = 0;
-    while (scores.every(s => s < 200) && round < 200) {
-      round++;
-      const hands = names.map(n => emptyHand(n));
+    // Call a student's fn safely — returns result or null on error
+    function simCall(fn, ...args) {
+      if (!fn) return null;
+      try { return fn(...args); } catch(e) { return null; }
+    }
 
-      // Play round: rotate one card at a time until all done
-      const active = () => hands.filter(h => !h.is_busted && !h._held && !h._frozen);
-      let turnOrder = [0,1,2,3];
+    // Resolve freeze target using student's received_frozen, fallback to highest scorer
+    function simResolveFreeze(drawerIdx, hands, gameScores) {
+      const simScoresDict = {}; names.forEach((nm,si) => simScoresDict[nm] = gameScores[si]);
+      const allHandsPublic = hands.map(publicHand);
+      const eligible = hands.map((h,i) => i).filter(i => !h_isDone(hands[i]));
+      if (!eligible.length) return -1;
+      let targetName = null;
+      if (drawerIdx === 0) {
+        // Player1 AI: freeze the player with the highest score
+        let best = -1;
+        for (const i of eligible) {
+          if (gameScores[i] > best) { best = gameScores[i]; targetName = names[i]; }
+        }
+      } else {
+        const fn = aiFunctions[drawerIdx - 1];
+        targetName = simCall(fn && fn._frozen_fn, allHandsPublic, simScoresDict);
+      }
+      const idx = names.indexOf(targetName);
+      return (idx >= 0 && eligible.includes(idx)) ? idx : eligible[0];
+    }
+
+    // Resolve flip3 target using student's received_flip3, fallback to most cards
+    function simResolveFlip3(drawerIdx, hands, gameScores) {
+      const simScoresDict = {}; names.forEach((nm,si) => simScoresDict[nm] = gameScores[si]);
+      const allHandsPublic = hands.map(publicHand);
+      const eligible = hands.map((h,i) => i).filter(i => !h_isDone(hands[i]));
+      if (!eligible.length) return -1;
+      let targetName = null;
+      if (drawerIdx === 0) {
+        // Player1 AI: flip3 onto player with most cards
+        let most = -1;
+        for (const i of eligible) {
+          const cnt = cardCount(hands[i]);
+          if (cnt > most) { most = cnt; targetName = names[i]; }
+        }
+      } else {
+        const fn = aiFunctions[drawerIdx - 1];
+        targetName = simCall(fn && fn._flip3_fn, allHandsPublic, simScoresDict);
+      }
+      const idx = names.indexOf(targetName);
+      return (idx >= 0 && eligible.includes(idx)) ? idx : eligible[0];
+    }
+
+    function h_isDone(h) { return h.is_busted || h._held || h._frozen; }
+
+    // Apply 3 forced cards to a target (handles freeze/flip3 recursion simply)
+    function simApplyFlip3(tgtIdx, hands, depth) {
+      if (depth > 3) return; // prevent infinite flip3 chains
+      for (let fc = 0; fc < 3 && !h_isDone(hands[tgtIdx]); fc++) {
+        const fc2 = simDraw();
+        const htgt = hands[tgtIdx];
+        if (fc2.type === 'number') {
+          if (htgt[fc2.value] === 1) {
+            if (htgt.second_chance === 1) { htgt.second_chance = 0; }
+            else { htgt.is_busted = 1; break; }
+          } else {
+            htgt[fc2.value] = 1;
+            if (cardCount(htgt) >= 7) {
+              hands.forEach(h => { if (!h.is_busted) h._held = true; });
+              return;
+            }
+          }
+        } else if (fc2.type === 'modifier') {
+          htgt[fc2.value] = 1;
+        } else if (fc2.value === 'freeze') {
+          htgt.freeze = 1;
+          const freezeTgt = simResolveFreeze(tgtIdx, hands, gameScores);
+          if (freezeTgt >= 0 && !h_isDone(hands[freezeTgt])) {
+            hands[tgtIdx].freeze = 0;
+            hands[freezeTgt].freeze = 1;
+            hands[freezeTgt]._frozen = true;
+          }
+        } else if (fc2.value === 'flip_three') {
+          htgt.flip_three = 1;
+          // Don't recurse flip3-in-flip3 too deeply
+        } else {
+          htgt[fc2.value] = 1;
+        }
+      }
+    }
+
+    let round = 0;
+    while (gameScores.every(s => s < 200) && round < 200) {
+      round++;
+      const hands = names.map(nm => emptyHand(nm));
+      let firstIdx = round % 4; // rotate start player clockwise
 
       let safety = 0;
-      while (active().length > 0 && safety++ < 5000) {
-        for (const idx of [...turnOrder]) {
+      while (!hands.every(h_isDone) && safety++ < 5000) {
+        // One full rotation
+        for (let offset = 0; offset < 4; offset++) {
+          const idx = (firstIdx + offset) % 4;
           const h = hands[idx];
-          if (h.is_busted || h._held || h._frozen) continue;
+          if (h_isDone(h)) continue;
 
-          // Ask for card?
-          let wants;
+          // Build inputs matching the real game
+          const simScoresDict = {}; names.forEach((nm,si) => simScoresDict[nm] = gameScores[si]);
+
+          // Ask: does this player want a card?
+          let wants = false;
           if (idx === 0) {
-            // Player1 AI — uses the shared decision function
             wants = player1AIDecision(h, deck, played);
           } else {
             const fn = aiFunctions[idx - 1];
             if (!fn) { h._held = true; continue; }
-            try {
-              const simScores = {}; names.forEach((nm,si)=>simScores[nm]=scores[si]);
-              wants = fn(publicHand(h), hands.map(publicHand), Object.assign({}, played), simScores);
-              wants = wants === true || wants === 1;
-            } catch(e) { wants = false; }
+            const result = simCall(fn, publicHand(h), hands.map(publicHand), Object.assign({}, played), simScoresDict);
+            wants = result === true || result === 1;
           }
 
           if (!wants) { h._held = true; continue; }
 
+          // Draw a card
           const card = simDraw();
+
           if (card.type === 'number') {
             if (h[card.value] === 1) {
               if (h.second_chance === 1) { h.second_chance = 0; }
-              else { h.is_busted = 1; continue; }
+              else { h.is_busted = 1; h._bust_card = card.value; }
             } else {
               h[card.value] = 1;
-              if (cardCount(h) === 7) {
-                // flip 7 — end round
-                hands.forEach((hh, i) => { if (!hh.is_busted && !hh._held && !hh._frozen) hh._held = true; });
+              if (cardCount(h) >= 7) {
+                hands.forEach(hh => { if (!hh.is_busted) hh._held = true; });
                 break;
               }
             }
           } else if (card.type === 'modifier') {
             h[card.value] = 1;
-          } else {
-            h[card.value] = 1;
-            if (card.value === 'freeze') h._frozen = true;
-            // flip_three: apply 3 random cards to a random eligible target
-            if (card.value === 'flip_three') {
-              const targets = hands.filter((hh,i) => !hh.is_busted && !hh._frozen);
-              if (targets.length > 0) {
-                const tgt = targets[Math.floor(Math.random() * targets.length)];
-                for (let fc = 0; fc < 3 && !tgt.is_busted; fc++) {
-                  const fc2 = simDraw();
-                  if (fc2.type === 'number') {
-                    if (tgt[fc2.value] === 1) tgt.is_busted = 1;
-                    else tgt[fc2.value] = 1;
-                  } else if (fc2.type === 'modifier') { tgt[fc2.value] = 1; }
-                  else { tgt[fc2.value] = 1; }
-                }
-              }
+          } else if (card.value === 'second_chance') {
+            h.second_chance = 1;
+          } else if (card.value === 'freeze') {
+            h.freeze = 1;
+            const freezeTgt = simResolveFreeze(idx, hands, gameScores);
+            if (freezeTgt >= 0 && !h_isDone(hands[freezeTgt])) {
+              h.freeze = 0;
+              hands[freezeTgt].freeze = 1;
+              hands[freezeTgt]._frozen = true;
+            }
+          } else if (card.value === 'flip_three') {
+            const flip3Tgt = simResolveFlip3(idx, hands, gameScores);
+            if (flip3Tgt >= 0) {
+              h.flip_three = 0;
+              hands[flip3Tgt].flip_three = 1;
+              simApplyFlip3(flip3Tgt, hands, 0);
             }
           }
         }
-        // Stop if all done
-        if (active().length === 0) break;
+        if (hands.every(h_isDone)) break;
       }
 
-      // Score
+      // Score this round
       hands.forEach((h, i) => {
         if (h.is_busted) return;
         const _num  = handNumTotal(h);
         const _f7   = cardCount(h) === 7 ? 15 : 0;
         const _base = h['x2'] === 1 ? (_num + _f7) * 2 : (_num + _f7);
-        let pts = _base + handModBonus(h);
-        scores[i] += pts;
+        gameScores[i] += _base + handModBonus(h);
       });
     }
 
     // Game winner = highest score
-    const maxS = Math.max(...scores);
-    const winnerIdx = scores.indexOf(maxS);
+    const maxS = Math.max(...gameScores);
+    const winnerIdx = gameScores.indexOf(maxS);
     wins[winnerIdx]++;
-    scores.forEach((s, i) => totals[i] += s);
+    gameScores.forEach((s, i) => totals[i] += s);
   }
 
   // Show results
@@ -1622,6 +1884,7 @@ function testCode(idx) {
   const code     = document.getElementById(`code-${idx}`).value.trim();
   const statusEl = document.getElementById(`status-${idx}`);
   const ta       = document.getElementById(`code-${idx}`);
+  const codeBox  = document.getElementById(`code-box-${idx}`);
   if (!code) { statusEl.textContent = 'empty'; statusEl.className = 'code-status'; return; }
   // Flash textarea to gray to show testing is happening
   if (ta) { ta.style.background = 'rgba(160,160,160,0.18)'; ta.style.transition = 'background 0.15s'; }
@@ -1630,33 +1893,142 @@ function testCode(idx) {
   try {
     const fn = compilePythonToJS(code);
     aiFunctions[idx] = fn;
-    const testHand = emptyHand('test');
-    testHand['3'] = 1; testHand['7'] = 1; testHand['11'] = 1;
-    const sampleDeck = buildDeck();
-    const result = fn(publicHand(testHand), [publicHand(testHand)], sampleDeck, {});
+    const studentName = [document.getElementById('ai-name-0').value||'Bekah',
+                         document.getElementById('ai-name-1').value||'Katie',
+                         document.getElementById('ai-name-2').value||'Mary'][idx];
+
+    // Use the test data panel (editable JSON) as inputs
+    const td = getTestData();
+    const sampleAllHands = Array.isArray(td.allHands) ? td.allHands : [td.hand];
+    const sampleCards    = td.cards;
+    const sampleScores   = td.scores;
+    // Make sure this student's hand is used as "hand"
+    const myHand = td.allHands && Array.isArray(td.allHands)
+      ? (td.allHands.find(h => h.owner === studentName) || td.hand)
+      : td.hand;
+
+    const debugEl = document.getElementById('debug-' + idx);
+    let messages = [];
+
+    // Test flip_card
+    const flipResult = fn(myHand, sampleAllHands, sampleCards, sampleScores);
+    if (flipResult !== true && flipResult !== false && flipResult !== 0 && flipResult !== 1) {
+      messages.push('⚠ flip_card returned: ' + JSON.stringify(flipResult) + ' — expected true or false\n  hand = ' + JSON.stringify(myHand, null, 2));
+    }
+
+    // Test received_frozen
+    let frozenOk = false;
+    const validNames = ['Player1', 'Bekah', 'Katie', 'Mary'];
+    if (fn._frozen_fn) {
+      try {
+        const frozenResult = fn._frozen_fn(sampleAllHands, sampleScores);
+        if (!validNames.includes(frozenResult)) {
+          const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
+          messages.push('⚠ received_frozen returned: ' + JSON.stringify(frozenResult) +
+            '\n  Valid targets are: ' + validNames.join(', ') +
+            '\n  scores input = ' + JSON.stringify(sampleScores) +
+            '\n  all_hands[0].owner = ' + sampleAllHands[0].owner +
+            (jsOut ? '\n\nTranspiled JS:\n' + jsOut : ''));
+        } else { frozenOk = true; }
+      } catch(fe) {
+        const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
+        messages.push('✗ received_frozen error: ' + fe.message +
+          '\n  scores = ' + JSON.stringify(sampleScores) +
+          '\n  all_hands owners = ' + sampleAllHands.map(h=>h.owner).join(', ') +
+          (jsOut ? '\n\nTranspiled JS (check variable names):\n' + jsOut : ''));
+      }
+    }
+
+    // Test received_flip3
+    let flip3Ok = false;
+    if (fn._flip3_fn) {
+      try {
+        const flip3Result = fn._flip3_fn(sampleAllHands, sampleScores);
+        if (!validNames.includes(flip3Result)) {
+          const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
+          messages.push('⚠ received_flip3 returned: ' + JSON.stringify(flip3Result) +
+            '\n  Valid targets are: ' + validNames.join(', ') +
+            '\n  scores = ' + JSON.stringify(sampleScores) +
+            '\n  all_hands owners = ' + sampleAllHands.map(h=>h.owner).join(', ') +
+            (jsOut ? '\n\nTranspiled JS:\n' + jsOut : ''));
+        } else { flip3Ok = true; }
+      } catch(fe) {
+        const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
+        messages.push('✗ received_flip3 error: ' + fe.message +
+          '\n  scores = ' + JSON.stringify(sampleScores) +
+          '\n  all_hands owners = ' + sampleAllHands.map(h=>h.owner).join(', ') +
+          (jsOut ? '\n\nTranspiled JS (check variable names):\n' + jsOut : ''));
+      }
+    }
+
+    const debugWrap = document.getElementById('debug-wrap-' + idx);
+    if (messages.length > 0 && debugEl) {
+      if(debugWrap) debugWrap.style.display='block';
+      debugEl.textContent = messages.join('\n\n');
+    } else if (debugEl) {
+      if(debugWrap) debugWrap.style.display='none';
+    }
+
     let extra = '';
-    if (fn._frozen_fn) extra += ' | received_frozen ✓';
-    if (fn._flip3_fn)  extra += ' | received_flip3 ✓';
+    if (fn._frozen_fn) extra += frozenOk ? ' | received_frozen ✓' : ' | received_frozen ⚠';
+    if (fn._flip3_fn)  extra += flip3Ok  ? ' | received_flip3 ✓'  : ' | received_flip3 ⚠';
     const ts = new Date().toLocaleTimeString();
-    statusEl.textContent = `✓ loaded ${ts} — test returned: ${result}${extra}`;
-    statusEl.className = 'code-status ok';
-    const _dEl=document.getElementById('debug-'+idx); if(_dEl) _dEl.style.display='none';
+    statusEl.textContent = (messages.length ? '⚠ ' : '✓ ') + 'loaded ' + ts + ' — flip_card → ' + flipResult + extra;
+    statusEl.className = messages.length ? 'code-status warn' : 'code-status ok';
     if (ta) { setTimeout(() => { ta.style.background = ''; }, 400); }
+    if (codeBox) setTimeout(() => { codeBox.style.background = ''; }, 500);
+    updateLineNumbers(idx);  // clear any error highlights
+    // Log all function results to the test console
+    const srcCode = document.getElementById('code-' + idx).value || '';
+    logTestResults(studentName, fn, td, srcCode);
   } catch (e) {
     aiFunctions[idx] = null;
-    let debugInfo = '(debug unavailable)';
-    try { debugInfo = compilePythonToJS._debugRun(document.getElementById('code-' + idx).value.trim()); }
-    catch(e2) { debugInfo = 'debug also failed: ' + e2.message; }
-    const debugEl = document.getElementById('debug-' + idx);
-    if (debugEl) {
-      debugEl.style.display = 'block';
-      debugEl.textContent = '== Transpiled JS ==\n' + debugInfo + '\n\n== Error ==\n' + e.message;
+
+    // Map JS error line → Python source line
+    const PREAMBLE_LINES = 3;
+    let transpiledJS = '';
+    let jsErrorLine  = null;
+    try {
+      transpiledJS = compilePythonToJS._debugRun(document.getElementById('code-' + idx).value.trim());
+      jsErrorLine  = extractErrorLine(e.message);
+    } catch(e2) { transpiledJS = '(transpile failed: ' + e2.message + ')'; }
+
+    const srcLine = jsErrorLine ? Math.max(1, jsErrorLine - PREAMBLE_LINES) : null;
+    updateLineNumbers(idx, srcLine);
+
+    const debugWrapErr = document.getElementById('debug-wrap-' + idx);
+    const debugElErr   = document.getElementById('debug-' + idx);
+    if (debugElErr && debugWrapErr) {
+      debugWrapErr.style.display = 'block';
+      const numbered  = addLineNumbers(transpiledJS);
+      const lineHint  = srcLine ? '(near Python source line ' + srcLine + ')' : '(line unknown)';
+      debugElErr.textContent = '== Transpiled JS ==\n' + numbered + '\n\n== Syntax Error ' + lineHint + ' ==\n' + e.message;
     }
+
     if (ta) { setTimeout(() => { ta.style.background = ''; }, 400); }
-    statusEl.textContent = '✗ ' + e.message;
+    if (codeBox) setTimeout(() => { codeBox.style.background = ''; }, 500);
+    statusEl.textContent = '\u2717 Line ' + (srcLine || '?') + ': ' + e.message;
     statusEl.className = 'code-status err';
-    console.error('Student ' + (idx+1) + ' error:', e.message);
-  }
+
+    // Log to test console — always, every time, unconditionally
+    try {
+      const errName = [document.getElementById('ai-name-0').value||'Bekah',
+                       document.getElementById('ai-name-1').value||'Katie',
+                       document.getElementById('ai-name-2').value||'Mary'][idx];
+      const ts2 = new Date().toLocaleTimeString();
+      consoleSep();
+      consoleAppend('=== ' + errName + ' — compile error (' + ts2 + ') ===', 'header');
+      if (srcLine) {
+        const srcLines = (document.getElementById('code-' + idx).value || '').split('\n');
+        const badLine  = (srcLines[srcLine - 1] || '').trim();
+        consoleAppend('Line ' + srcLine + ': ' + badLine, 'warn');
+        consoleAppend('\u2717 ' + e.message, 'err');
+      } else {
+        consoleAppend('\u2717 ' + e.message, 'err');
+        consoleAppend('Tip: check the red debug panel below the code for the transpiled JS', 'dim');
+      }
+    } catch(logErr) { console.error('Console log failed:', logErr); }
+    console.error('Student ' + (idx+1) + ' error:', e.message);  }
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1749,12 +2121,12 @@ function compilePythonToJS(rawCode) {
 
   // for x in range(n):
   js = js.replace(
-    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,
+    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)[ \t]*:/g,
     'for (let $1 = 0; $1 < $2; $1++):'
   );
   // for x in range(a, b):
   js = js.replace(
-    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*\)\s*:/g,
+    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*\)[ \t]*:/g,
     'for (let $1 = $2; $1 < $3; $1++):'
   );
   // for x in range(a, b, step):
@@ -1769,15 +2141,19 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\.values\(\)/g,'.values()');
   js = js.replace(/\.append\(([^)]+)\)/g, '.push($1)');
 
-  // STEP 7b: Convert Python-style "for k, v in obj.entries():" to JS for..of
-  // This handles dict iteration with destructuring
+  // STEP 7b: Convert "for k, v in dict:" or "for k, v in dict.items():" → for..of
+  // Handle .items() variant first, then bare dict iteration
+  js = js.replace(
+    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\.items\(\)\s*:/g,
+    'for (const [$1, $2] of Object.entries($3)):'
+  );
+  js = js.replace(
+    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g,
+    'for (const [$1, $2] of Object.entries($3)):'
+  );
+  // Handle already-.entries()-ified forms from earlier transforms
   js = js.replace(
     /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,
-    'for (const [$1, $2] of $3.entries()):'
-  );
-  // Also handle bare "for x, y in obj:" (already got .entries() added in 5c above)
-  js = js.replace(
-    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+([\w.]+)\.entries\(\)\s*:/g,
     'for (const [$1, $2] of $3.entries()):'
   );
 
@@ -1817,7 +2193,7 @@ function compilePythonToJS(rawCode) {
 
   // STEP 12: Also extract received_frozen and received_flip3 if present
   fn._frozen_fn = extractPythonFn(rawCode, 'received_frozen', ['all_hands', 'scores']);
-  fn._flip3_fn  = extractPythonFn(rawCode, 'received_flip3',  ['all_hands']);
+  fn._flip3_fn  = extractPythonFn(rawCode, 'received_flip3',  ['all_hands', 'scores']);
 
   return fn;
 }
@@ -1845,7 +2221,7 @@ compilePythonToJS._debugRun = function(rawCode) {
   js=js.replace(/([\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)');
   js=js.replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()');
   js=js.replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,'for (const [$1,$2] of $3.entries()):');
-  js=js.replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,'for (let $1=0;$1<$2;$1++):');
+  js=js.replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)[ \t]*:/g,'for (let $1=0;$1<$2;$1++):');
   js=js.replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
   js=js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\s+([(\w])/g,'!$1');
   js=js.replace(/\belif\s+/g,'else if ').replace(/\blen\(([^)]+)\)/g,'($1).length');
@@ -1872,30 +2248,74 @@ function extractPythonFn(rawCode, fnName, paramNames) {
       if (line.startsWith(baseIndent) || line.startsWith('\t')) bodyLines.push(line);
       else if (line.trim()) break;
     }
-    if (bodyLines.length === 0) return null;
+    if (bodyLines.length === 0) {
+      // Function exists but has no body
+      const emptyFn = function() { return undefined; };
+      emptyFn._compileError = 'Function body is empty — add code inside the function';
+      return emptyFn;
+    }
 
     let js = bodyLines.join('\n');
-    // Fix single = in if conditions
+
+    // Strip comments
+    js = js.replace(/#[^\n]*/g, '');
+
+    // Fix backslash continuations
+    js = js.replace(/\\\n\s*/g, ' ');
+
+    // Fix single = in if/elif conditions (assignment used as comparison)
     js = js.replace(/\b(if|elif)\s+(\w+)\s*=\s*(?!=)/g, '$1 $2 ==');
-    // Fix "for k, v in dict:" → add .items()
-    js = js.replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g, 'for $1, $2 in $3.items():');
-    js = js
-      .replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null')
-      .replace(/\band\b/g,'&&').replace(/\bor\b/g,'||')
-      .replace(/\bnot\s+([\(\w])/g,'!$1')
-      .replace(/\belif\s+/g,'else if ')
-      .replace(/([\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)')
-      .replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()')
-      .replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,'for (const [$1,$2] of $3.entries()):')
-      .replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,'for (let $1=0;$1<$2;$1++):')
-      .replace(/\blen\(([^)]+)\)/g,'($1).length')
-      .replace(/\bint\(([^)]+)\)/g,'parseInt($1)')
-      .replace(/\bstr\(([^)]+)\)/g,'String($1)');
+
+    // Fix True/False/None/operators first
+    js = js.replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
+    js = js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\s+([\(\w])/g,'!$1');
+    js = js.replace(/\belif\s+/g,'else if ');
+
+    // Fix "for k, v in dict:" → for..of destructuring in ONE step
+    // Handles: for x, y in scores: OR for x, y in scores.items():
+    js = js.replace(
+      /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\.items\(\)\s*:/g,
+      'for (const [$1, $2] of Object.entries($3)):'
+    );
+    js = js.replace(
+      /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g,
+      'for (const [$1, $2] of Object.entries($3)):'
+    );
+    // for x in list/all_hands (non-range)
+    js = js.replace(
+      /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,?\s*(\w+|\d+)?\s*\)\s*:/g,
+      function(_, v, a, b) { return b ? 'for (let '+v+'='+a+';'+v+'<'+b+';'+v+'++):' : 'for (let '+v+'=0;'+v+'<'+a+';'+v+'++):'; }
+    );
+    js = js.replace(
+      /\bfor\s+(\w+)\s+in\s+(\w+)\s*:/g,
+      'for (const $1 of $2):'
+    );
+
+    // Built-ins
+    js = js.replace(/([ \t]*[\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)');
+    js = js.replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()');
+    js = js.replace(/\blen\(([^)]+)\)/g,'($1).length');
+    js = js.replace(/\bint\(([^)]+)\)/g,'parseInt($1)');
+    js = js.replace(/\bfloat\(([^)]+)\)/g,'parseFloat($1)');
+    js = js.replace(/\bstr\(([^)]+)\)/g,'String($1)');
+    js = js.replace(/\babs\(([^)]+)\)/g,'Math.abs($1)');
+    js = js.replace(/\bprint\s*\([^)]*\)/g,'');
+
     js = convertIndentToBlocks(js);
-    const body = '"use strict";\nvar result=\'\',score=0,most_cards=0,most_name=\'\',name=\'\',num_cards=0;\n' + js;
-    return new Function(paramNames.join(','), body);
+
+    // Comprehensive preamble — all variable names students commonly use
+    const preamble = 'var result="",score=0,most_cards=0,most_name="",name="",' +
+      'num_cards=0,high_score=-1,high_name="",winner_name="",highest_score=-1,' +
+      'points=0,answer=false,pick=false,total=0,count=0,temp=0;';
+    // Build param aliases so variables are always accessible even with use strict
+    const paramAliases = paramNames.map(p => 'var ' + p + ' = ' + p + ';').join(' ');
+    return new Function(paramNames.join(','), preamble + '\n' + paramAliases + '\n' + js);
   } catch(e) {
-    return null;
+    // Return a sentinel function that throws the original error when called
+    const errMsg = e.message;
+    const sentinel = function() { throw new Error('Compile error: ' + errMsg); };
+    sentinel._compileError = errMsg;
+    return sentinel;
   }
 }
 
@@ -1922,10 +2342,11 @@ function convertIndentToBlocks(code) {
 
     // Does this line open a block? Must end with ':' and be a control keyword
     const isControl = /^(if\b|else if\b|else:|for\b|while\b)/.test(trimmed) || trimmed === 'else:';
-    const endsColon = trimmed.endsWith(':');
+    const endsColon = trimmed.trimEnd().endsWith(':');
+    const trimmedClean = trimmed.trimEnd();
 
     if (isControl && endsColon) {
-      const noColon = trimmed.slice(0, -1).trim();
+      const noColon = trimmedClean.slice(0, -1).trim();
       let jsLine;
 
       if (noColon === 'else') {
@@ -2070,7 +2491,8 @@ function callReceivedFlip3(aiIdx) {
   if (!fn || !fn._flip3_fn) return null;
   try {
     const allHands = state.hands.map(publicHand);
-    return fn._flip3_fn(allHands);
+    const scores   = buildScoresDict();
+    return fn._flip3_fn(allHands, scores);
   } catch(e) {
     console.warn('received_flip3 error:', e.message);
     return null;
@@ -2096,7 +2518,6 @@ function resolveFreeze(playerIdx, callback) {
   if (eligible.length === 0) { callback(null); return; }
 
   if (playerIdx === 0) {
-    // Human picks
     showPickModal(
       'Freeze a Player',
       'You drew a Freeze card. Choose who to freeze out this round.',
@@ -2104,16 +2525,15 @@ function resolveFreeze(playerIdx, callback) {
       callback
     );
   } else {
-    // AI picks via received_frozen
     const aiIdx  = playerIdx - 1;
-    const scores = buildScoresDict();
     let target   = callReceivedFrozen(aiIdx);
-    // Validate — must be a real active player name
     const validNames = eligible.map(e => e.name);
     if (!target || !validNames.includes(target)) {
-      // fallback: pick random eligible player
-      target = eligible[Math.floor(Math.random() * eligible.length)].name;
-      addLog(`${displayName}'s received_frozen() returned invalid target, chose randomly`, 'warn');
+      const fallback = eligible[Math.floor(Math.random() * eligible.length)].name;
+      addLog(`<span class="event-player">${displayName}</span> received_frozen() returned <b>${JSON.stringify(target)}</b> (invalid) — randomly froze ${fallback}`, 'warn');
+      target = fallback;
+    } else {
+      addLog(`<span class="event-player">${displayName}</span> received_frozen() returned <b>${target}</b>`, '');
     }
     callback(target);
   }
@@ -2140,8 +2560,11 @@ function resolveFlip3Target(playerIdx, callback) {
     let target  = callReceivedFlip3(aiIdx);
     const validNames = eligible.map(e => e.name);
     if (!target || !validNames.includes(target)) {
-      target = eligible[Math.floor(Math.random() * eligible.length)].name;
-      addLog(`${displayName}'s received_flip3() returned invalid target, chose randomly`, 'warn');
+      const fallback = eligible[Math.floor(Math.random() * eligible.length)].name;
+      addLog(`<span class="event-player">${displayName}</span> received_flip3() returned <b>${JSON.stringify(target)}</b> (invalid) — randomly targeting ${fallback}`, 'warn');
+      target = fallback;
+    } else {
+      addLog(`<span class="event-player">${displayName}</span> received_flip3() chose to target <b>${target}</b>`, '');
     }
     callback(target);
   }
@@ -2162,32 +2585,20 @@ function nameToPlayerIdx(name) {
 // Returns true (flip) or false (hold)
 // ============================================================
 function player1AIDecision(hand, deck, played) {
-  const numTotal  = handNumTotal(hand);   // sum of number cards only
-  const numCards  = cardCount(hand);      // count of number cards
+  const numTotal = handNumTotal(hand);  // sum of number cards (0-12) only
+  const numCards = cardCount(hand);     // count of number cards held
 
-  // Rule 1: if number-card total is 30+, hold
-  if (numTotal >= 30) return false;
+  // Rule 1: hold if 6 number cards already — always draw the 7th for the +15 bonus
+  if (numCards >= 6) return true;
 
-  // Rule 2: if already have 5+ number cards, keep drawing to chase the 7-card +15 bonus
-  if (numCards >= 5) return true;
+  // Rule 2: hold at 27+ points from regular number cards
+  if (numTotal >= 27) return false;
 
-  // Rule 3: if holding a 10, 11, or 12 and more than 60% of that card's
-  //         copies remain in the deck, the risk of a duplicate is too high — hold
-  const totalDeckSize = deck.length;
-  if (totalDeckSize > 0) {
-    for (const bigCard of ['10', '11', '12']) {
-      if (hand[bigCard] === 1) {
-        // How many copies of this card exist in total in the original deck?
-        const totalCopies = parseInt(bigCard); // e.g. 12 copies of 12
-        const playedCount = played[bigCard] || 0;
-        const remaining   = totalCopies - playedCount;
-        // If more than 60% of copies are still unplayed, the duplicate risk is high
-        if (remaining / totalCopies > 0.60) return false;
-      }
-    }
-  }
+  // Rule 3: if 3 or more number cards that are 8, 9, 10, 11, or 12, hold
+  const highCards = ['8','9','10','11','12'].filter(k => hand[k] === 1).length;
+  if (highCards >= 3) return false;
 
-  // Default: draw if total < 30 and fewer than 5 number cards
+  // Default: draw
   return true;
 }
 
@@ -2472,7 +2883,26 @@ function applyFlipThree(targetIdx, callback) {
     logCardDeal(targetIdx, card, res);
     renderAll(); updateDeckCount();
     i++;
-    if (res.flip7) { callback(); return; }  // round ends — stop drawing
+    if (res.flip7) { callback(); return; }
+    if (res.busted) { callback(); return; }
+    // If target drew a freeze card during flip3, they pick who to freeze
+    if (res.special === 'freeze') {
+      resolveFreeze(targetIdx, (freezeTarget) => {
+        const freezeIdx = nameToPlayerIdx(freezeTarget);
+        if (freezeIdx >= 0 && !isDone(state.hands[freezeIdx])) {
+          state.hands[freezeIdx]._frozen = true;
+          // Move freeze card to the frozen player's mat
+          state.hands[targetIdx].freeze = 0;
+          state.hands[freezeIdx].freeze = 1;
+          const fd = freezeIdx === 0 ? 'You' : state.playerNames[freezeIdx];
+          addLog(`<span class="event-player">${tDisplay}</span> froze <span class="event-player">${fd}</span> (during Flip Three)!`, 'highlight');
+          renderAll();
+        }
+        drawNext();
+      });
+      return; // wait for freeze resolution before continuing
+    }
+    // If target drew another flip_three during flip3, just keep it (no chain)
     drawNext();
   }
   drawNext();
@@ -2599,17 +3029,17 @@ function buildResultScoresHTML(winnerIdx, pts) {
 
     const hasFlip7 = !busted && cardCount(h) === 7;
     const statusLine = busted
-      ? `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--bust);margin-top:2px;">BUSTED — drew duplicate ${bustCard} — 0 pts</div>`
+      ? `<div style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--bust);margin-top:3px;">BUSTED — drew duplicate ${bustCard}</div><div style="font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--bust);">0 pts this round</div>`
       : (pts[i] > 0
-          ? `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--neon-green);margin-top:2px;">+${pts[i]} pts this round${hasFlip7 ? ' <span style="color:var(--gold);">(incl. +15 Flip 7!)</span>' : ''}</div>`
-          : `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--text-muted);margin-top:2px;">0 pts this round</div>`);
+          ? `<div style="font-family:'Bebas Neue',cursive;font-size:1.15rem;color:var(--neon-green);margin-top:3px;">+${pts[i]} pts this round${hasFlip7 ? ' <span style="font-size:0.85rem;color:var(--gold);">(+15 Flip 7!)</span>' : ''}</div>`
+          : `<div style="font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--text-muted);margin-top:3px;">0 pts this round</div>`);
 
     return `<div class="result-score-item ${winCls} ${bustCls}">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
         <div class="rsname" style="font-size:0.75rem;font-weight:500;${isWinner?'color:var(--gold);':''}">${isWinner ? '★ ' : ''}${dn}</div>
         ${busted ? '<span style="background:rgba(232,85,85,0.2);border:1px solid rgba(232,85,85,0.4);border-radius:3px;font-size:0.55rem;color:var(--bust);padding:1px 5px;font-family:DM Mono,monospace;">BUST</span>' : ''}
       </div>
-      <div style="font-family:'Bebas Neue',cursive;font-size:1.4rem;line-height:1;color:${isWinner?'var(--gold)':'var(--text-light)'};">${state.scores[i]}</div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:1.8rem;line-height:1;color:${isWinner?'var(--gold)':'var(--text-light)'};">${state.scores[i]}</div>
       ${statusLine}
       <div style="margin-top:5px;border-top:1px solid rgba(255,255,255,0.06);padding-top:5px;">
         ${noCards ? '<span style="font-size:0.58rem;color:var(--text-muted);">no cards</span>' : numGroup + modGroup + spGroup}
@@ -2912,14 +3342,242 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────
+// TEST RESULTS CONSOLE
+// ─────────────────────────────────────────────────────────────────
+
+function clearTestConsole() {
+  const el = document.getElementById('test-console');
+  if (el) el.innerHTML = '<p class="console-line dim">— Cleared —</p>';
+}
+
+function consoleAppend(text, cls='') {
+  const el = document.getElementById('test-console');
+  if (!el) { console.log('[console]', text); return; }
+  // Remove the placeholder if present
+  const ph = el.querySelector('.dim');
+  if (ph && ph.textContent.includes('Run')) ph.remove();
+  const p = document.createElement('p');
+  p.className = 'console-line ' + cls;
+  p.textContent = text;
+  el.appendChild(p);
+  el.scrollTop = el.scrollHeight;
+  // Flash the console border briefly so user notices new content
+  el.style.borderColor = 'rgba(57,255,110,0.5)';
+  clearTimeout(el._flashTimer);
+  el._flashTimer = setTimeout(() => { el.style.borderColor = ''; }, 600);
+}
+
+function consoleSep() {
+  const el = document.getElementById('test-console');
+  if (!el) return;
+  const hr = document.createElement('hr');
+  hr.className = 'console-separator';
+  el.appendChild(hr);
+  el.scrollTop = el.scrollHeight;
+}
+
+// Report a compile error with source line info
+function reportCompileErrorLine(errMsg, srcCode) {
+  const jsLine  = extractErrorLine(errMsg);
+  const srcLine = jsLine ? Math.max(1, jsLine - 3) : null;
+  if (srcLine && srcCode) {
+    const lines   = srcCode.split('\n');
+    const badLine = (lines[srcLine - 1] || '').trim();
+    consoleAppend('  Line ' + srcLine + ': ' + badLine, 'warn');
+    consoleAppend('  Tip: check the syntax on that line — missing colon, bad operator, or unknown variable.', 'dim');
+  } else {
+    consoleAppend('  Tip: look at the transpiled JS debug panel below the code box for details.', 'dim');
+  }
+}
+
+// Helper: run a compiled function and report result + any runtime error with line info
+function runAndReport(label, fn, args, validTargets, srcCode) {
+  consoleAppend(label + ':', 'label');
+  try {
+    const r = fn(...args);
+    if (validTargets === null) {
+      // flip_card — expects bool
+      const isBool = r === true || r === false || r === 1 || r === 0;
+      consoleAppend('  → returned: ' + JSON.stringify(r), isBool ? (r ? 'ok' : 'warn') : 'err');
+      consoleAppend('  ' + (r === true || r === 1 ? '✓ FLIP — will draw a card' : r === false || r === 0 ? '✓ HOLD — will not draw' : '✗ Unexpected return value (expected True or False)'), isBool ? (r ? 'ok' : 'warn') : 'err');
+    } else {
+      // freeze / flip3 — expects player name string
+      const valid = validTargets.includes(r);
+      consoleAppend('  → returned: ' + JSON.stringify(r), valid ? 'result' : 'err');
+      consoleAppend('  ' + (valid ? '✓ Will target: ' + r : '✗ Invalid! Must be one of: ' + validTargets.join(', ')), valid ? 'ok' : 'err');
+    }
+  } catch(e) {
+    // Runtime error — try to find which source line
+    const jsLine   = extractErrorLine(e.message);
+    const srcLine  = jsLine ? Math.max(1, jsLine - 3) : null;
+    const srcLines = (srcCode || '').split('\n');
+    const badLine  = srcLine ? (srcLines[srcLine - 1] || '').trim() : '';
+
+    consoleAppend('  ✗ Runtime error: ' + e.message, 'err');
+    if (srcLine) {
+      consoleAppend('  Line ' + srcLine + ': ' + badLine, 'warn');
+      consoleAppend('  Tip: check that all variables used on that line are defined above it.', 'dim');
+    }
+  }
+}
+
+// Log all three function results for a student into the test console
+function logTestResults(studentName, fn, td, srcCode) {
+  const ts = new Date().toLocaleTimeString();
+  consoleSep();
+  consoleAppend('=== ' + studentName + ' — tested at ' + ts + ' ===', 'header');
+
+  const validTargets = ['Player1','Bekah','Katie','Mary'];
+  const numCards = td.hand ? CARD_NUMS.filter(k=>td.hand[k]===1).length : '?';
+  consoleAppend('Inputs: hand.owner=' + (td.hand && td.hand.owner || '?') + ', num-cards=' + numCards + ', scores=' + JSON.stringify(td.scores), 'dim');
+
+  // flip_card
+  runAndReport('flip_card(hand, all_hands, cards, scores)',
+    fn, [td.hand, td.allHands, td.cards, td.scores], null, srcCode);
+
+  // received_frozen
+  if (fn._frozen_fn && fn._frozen_fn._compileError) {
+    consoleAppend('received_frozen(all_hands, scores):', 'label');
+    consoleAppend('  ✗ Compile error: ' + fn._frozen_fn._compileError, 'err');
+    reportCompileErrorLine(fn._frozen_fn._compileError, srcCode);
+  } else if (fn._frozen_fn) {
+    runAndReport('received_frozen(all_hands, scores)',
+      fn._frozen_fn, [td.allHands, td.scores], validTargets, srcCode);
+  } else {
+    consoleAppend('received_frozen — not defined in code (optional)', 'dim');
+  }
+
+  // received_flip3
+  if (fn._flip3_fn && fn._flip3_fn._compileError) {
+    consoleAppend('received_flip3(all_hands, scores):', 'label');
+    consoleAppend('  ✗ Compile error: ' + fn._flip3_fn._compileError, 'err');
+    reportCompileErrorLine(fn._flip3_fn._compileError, srcCode);
+  } else if (fn._flip3_fn) {
+    runAndReport('received_flip3(all_hands, scores)',
+      fn._flip3_fn, [td.allHands, td.scores], validTargets, srcCode);
+  } else {
+    consoleAppend('received_flip3 — not defined in code (optional)', 'dim');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// TEST DATA PANEL
+// ─────────────────────────────────────────────────────────────────
+
+function buildRandomTestHand(owner) {
+  const h = emptyHand(owner);
+  // Pick 2-4 random number cards
+  const nums = [...CARD_NUMS].sort(() => Math.random()-0.5).slice(0, 2 + Math.floor(Math.random()*3));
+  nums.forEach(k => h[k] = 1);
+  // Occasionally add a modifier
+  if (Math.random() > 0.7) { const m = MODIFIERS[Math.floor(Math.random()*MODIFIERS.length)]; h[m] = 1; }
+  return h;
+}
+
+function buildRandomPlayedCards() {
+  const p = emptyPlayedCards();
+  // Mark some cards as having been played
+  CARD_NUMS.forEach(k => { if (Math.random() > 0.6) p[k] = Math.floor(Math.random() * parseInt(k||'1')) + 1 | 0; });
+  MODIFIERS.forEach(k => { if (Math.random() > 0.7) p[k] = 1; });
+  return p;
+}
+
+function randomizeTestData() {
+  const names = getNames(); // ['Player1', 'Bekah', 'Katie', 'Mary']
+  const hand      = publicHand(buildRandomTestHand(names[1] || 'Bekah'));
+  const allHands  = names.map((nm,i) => publicHand(buildRandomTestHand(nm)));
+  const scores    = {}; names.forEach((nm,i) => scores[nm] = Math.floor(Math.random()*120));
+  const cards     = buildRandomPlayedCards();
+
+  const fmt = obj => JSON.stringify(obj, null, 2);
+  const ta_h  = document.getElementById('test-hand');
+  const ta_ah = document.getElementById('test-all-hands');
+  const ta_sc = document.getElementById('test-scores');
+  const ta_cd = document.getElementById('test-cards');
+  if (ta_h)  ta_h.value  = fmt(hand);
+  if (ta_ah) ta_ah.value = fmt(allHands);
+  if (ta_sc) ta_sc.value = fmt(scores);
+  if (ta_cd) ta_cd.value = fmt(cards);
+}
+
+function getTestData() {
+  function safeParse(id, fallback) {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) return fallback;
+    try { return JSON.parse(el.value); }
+    catch(e) { return fallback; }
+  }
+  const names = getNames();
+  const defHand   = publicHand(buildRandomTestHand(names[1] || 'Bekah'));
+  const defAH     = names.map((nm,i) => publicHand(buildRandomTestHand(nm)));
+  const defScores = {}; names.forEach((nm,i) => defScores[nm] = i * 17);
+  const defCards  = emptyPlayedCards();
+
+  return {
+    hand:     safeParse('test-hand',      defHand),
+    allHands: safeParse('test-all-hands', defAH),
+    scores:   safeParse('test-scores',    defScores),
+    cards:    safeParse('test-cards',     defCards),
+  };
+}
+
+// Add line numbers to transpiled JS for error display
+function addLineNumbers(js) {
+  return js.split('\n').map((line, i) => (i+1).toString().padStart(3,' ') + ' | ' + line).join('\n');
+}
+
+
+// ─────────────────────────────────────────────────────────────────
+// LINE NUMBER EDITOR FUNCTIONS
+// ─────────────────────────────────────────────────────────────────
+function updateLineNumbers(idx, errorLine) {
+  const ta = document.getElementById('code-' + idx);
+  const ln = document.getElementById('line-nums-' + idx);
+  if (!ta || !ln) return;
+  const lines = ta.value.split('\n');
+  const count = Math.max(lines.length, 1);
+  ln.innerHTML = Array.from({length: count}, (_, i) => {
+    const num = i + 1;
+    if (errorLine && num === errorLine) {
+      return '<span class="ln-error">' + String(num).padStart(2, ' ') + '</span>';
+    }
+    return String(num).padStart(2, ' ');
+  }).join('\n');
+  // Match font metrics so numbers align with text
+  const style = window.getComputedStyle(ta);
+  ln.style.fontSize   = style.fontSize;
+  ln.style.lineHeight = style.lineHeight;
+  ln.style.paddingTop = style.paddingTop;
+  // Sync scroll
+  ln.scrollTop = ta.scrollTop;
+}
+
+function syncScroll(idx) {
+  const ta = document.getElementById('code-' + idx);
+  const ln = document.getElementById('line-nums-' + idx);
+  if (ta && ln) ln.scrollTop = ta.scrollTop;
+}
+
+function extractErrorLine(errMsg) {
+  // JS errors often say "SyntaxError at line N" or contain ":N:M"
+  const m = errMsg.match(/<anonymous>:(\d+):(\d+)/) ||
+            errMsg.match(/at.*?:(\d+):(\d+)/) ||
+            errMsg.match(/line (\d+)/i) ||
+            errMsg.match(/:(\d+):/);
+  if (m) return parseInt(m[1]);
+  return null;
+}
+
 window.onload = () => {
   const sampleDeck = buildDeck();
   document.getElementById('deck-count').textContent = sampleDeck.length;
   addLog(`Deck contains ${sampleDeck.length} cards`, '');
   addLog('Cards: 1×0, 1×1, 2×2 … 12×12, plus specials & 6 modifier cards', '');
   updateScoreboard();
-  // Set default starter code for all three students
-  const defaultCode = `def flip_card(hand, all_hands, cards, scores):
+  // Per-student default code
+  const defaultCodes = [
+    `def flip_card(hand, all_hands, cards, scores):
     points = 0
     for x in range(13):
         points += hand[str(x)] * x
@@ -2929,16 +3587,48 @@ window.onload = () => {
         return True
 
 def received_frozen(all_hands, scores):
-    return "Mary"
+    return "Player1"
 
-def received_flip3(all_hands):
-    return "Katie"
-`;
+def received_flip3(all_hands, scores):
+    return "Player1"
+`,
+    `def flip_card(hand, all_hands, cards, scores):
+    points = 0
+    for x in range(13):
+        points += hand[str(x)] * x
+    if points > 25:
+        return False
+    else:
+        return True
+
+def received_frozen(all_hands, scores):
+    return "Player1"
+
+def received_flip3(all_hands, scores):
+    return "Player1"
+`,
+    `def flip_card(hand, all_hands, cards, scores):
+    points = 0
+    for x in range(13):
+        points += hand[str(x)] * x
+    if points > 25:
+        return False
+    else:
+        return True
+
+def received_frozen(all_hands, scores):
+    return "Player1"
+
+def received_flip3(all_hands, scores):
+    return "Player1"
+`
+  ];
   for (let i = 0; i < 3; i++) {
     const ta = document.getElementById('code-' + i);
-    if (ta && !ta.value.trim()) ta.value = defaultCode;
+    if (ta && !ta.value.trim()) ta.value = defaultCodes[i];
   }
-  for (let i = 0; i < 3; i++) testCode(i);
+  randomizeTestData();
+  for (let i = 0; i < 3; i++) { updateLineNumbers(i); testCode(i); }
 };
 </script>
 </body>
