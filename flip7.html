@@ -954,6 +954,40 @@
     border-radius: 0;
   }
 
+
+  /* PLAYER AVATARS */
+  .avatar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(201,168,76,0.4);
+    flex-shrink: 0;
+  }
+  .avatar-fallback {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    background: rgba(201,168,76,0.12);
+    color: var(--gold);
+  }
+  /* Smaller avatar for student panels */
+  .avatar-sm { width: 60px; height: 60px; font-size: 1.6rem; }
+  .avatar-sm.avatar { width: 60px; height: 60px; }
+
 </style>
 </head>
 <body>
@@ -979,7 +1013,8 @@
   <!-- Bekah (left) -->
   <div class="bekah-panel">
     <div class="student-panel" id="bekah-section">
-      <div class="student-name-row">
+      <div class="student-name-row" style="display:flex;align-items:center;gap:0.4rem;">
+        <div id="bekah-avatar-wrap"></div>
         <div class="student-name" style="color:#c9a84c;" id="bekah-name-display">Bekah</div>
         <span class="status waiting" id="bekah-status">waiting</span>
       </div>
@@ -996,7 +1031,8 @@
   <!-- Katie (center) -->
   <div class="katie-panel">
     <div class="student-panel" id="katie-section">
-      <div class="student-name-row">
+      <div class="student-name-row" style="display:flex;align-items:center;gap:0.4rem;">
+        <div id="katie-avatar-wrap"></div>
         <div class="student-name" style="color:#5599ff;" id="katie-name-display">Katie</div>
         <span class="status waiting" id="katie-status">waiting</span>
       </div>
@@ -1013,7 +1049,8 @@
   <!-- Mary (right) -->
   <div class="mary-panel">
     <div class="student-panel" id="mary-section">
-      <div class="student-name-row">
+      <div class="student-name-row" style="display:flex;align-items:center;gap:0.4rem;">
+        <div id="mary-avatar-wrap"></div>
         <div class="student-name" style="color:#cc55ff;" id="mary-name-display">Mary</div>
         <span class="status waiting" id="mary-status">waiting</span>
       </div>
@@ -1049,7 +1086,7 @@
     </div>
 
     <div class="player-section" id="human-section">
-      <div class="player-name" id="human-display-name">You</div>
+      <div class="avatar-wrap"><div id="human-avatar-wrap"></div><div class="player-name" id="human-display-name">You</div></div>
       <div class="player-meta">
         <span>Score: <span class="score" id="human-score">0</span></span>
         <span class="status waiting" id="human-status">waiting</span>
@@ -1387,10 +1424,11 @@ def received_flip3(all_hands, scores):
 
       <!-- received_flip3 -->
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(204,85,255,0.25);border-radius:8px;padding:1rem 1.2rem;margin-bottom:0.5rem;">
-        <div style="color:#cc55ff;font-size:0.82rem;margin-bottom:0.5rem;">def received_flip3(all_hands) → str</div>
+        <div style="color:#cc55ff;font-size:0.82rem;margin-bottom:0.5rem;">def received_flip3(all_hands, scores) → str</div>
         <div style="color:var(--text-muted);margin-bottom:0.7rem;">Called when you draw a <span style="color:#cc55ff;">Flip Three ⚡</span> card. Return the <strong>name</strong> of the player you want to force-flip 3 cards onto (can be yourself!).</div>
 
         <div style="color:var(--gold);margin-bottom:0.3rem;font-size:0.75rem;">▸ all_hands — same list of all players' hands as in flip_card (see above)</div>
+        <div style="color:var(--gold);margin-bottom:0.3rem;font-size:0.75rem;margin-top:0.4rem;">▸ scores — same scores dict as in received_frozen (see above)</div>
 
         <div style="color:var(--gold);margin-bottom:0.2rem;font-size:0.75rem;margin-top:0.5rem;">▸ Valid return values:</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.3rem;">
@@ -1555,6 +1593,7 @@ function startSimulator(n) {
     }
   }
 
+  const simStartTime = Date.now();
   for (let g = 0; g < n; g++) {
     const gameScores = [0, 0, 0, 0];
     // Deck persists across rounds (reshuffled only when empty) — like the real game
@@ -1723,7 +1762,8 @@ function startSimulator(n) {
         }
       }
 
-      // ── Score the round ──────────────────────────────────────────────
+      if (safety >= 2000) console.warn('Safety limit hit in game', g+1, 'round', round);
+    // ── Score the round ──────────────────────────────────────────────
       hands.forEach((h, i) => {
         if (h.is_busted) return;
         const numPts = handNumTotal(h);
@@ -1742,12 +1782,13 @@ function startSimulator(n) {
     // Log this game's result to the console
     const scoreStr = displayNamesShort.map((nm, i) => '"' + nm + '": ' + gameScores[i]).join(', ');
     const winnerMark = displayNamesShort[winnerIdx];
-    consoleAppend('Game ' + (g+1) + ': {' + scoreStr + '}  ← ' + winnerMark + ' wins', g === 0 ? 'ok' : '');
+    consoleAppend('Game ' + (g+1) + ' (' + round + ' rounds): {' + scoreStr + '}  ← ' + winnerMark + ' wins', g === 0 ? 'ok' : '');
   }
 
   // Log summary to console
+  const simMs = Date.now() - simStartTime;
   consoleSep();
-  consoleAppend('=== Final Tally after ' + n.toLocaleString() + ' game' + (n>1?'s':'') + ' ===', 'header');
+  consoleAppend('=== Final Tally after ' + n.toLocaleString() + ' game' + (n>1?'s':'') + ' (' + simMs + 'ms) ===', 'header');
   const sortedIdx = [0,1,2,3].sort((a,b) => wins[b]-wins[a]);
   sortedIdx.forEach(i => {
     const pct = (wins[i]/n*100).toFixed(1);
@@ -2056,7 +2097,7 @@ function testCode(idx) {
       try {
         const flip3Result = fn._flip3_fn(sampleAllHands, sampleScores);
         if (!validNames.includes(flip3Result)) {
-          messages.push('⚠ received_flip3 returned: ' + JSON.stringify(flip3Result) +
+          messages.push('⚠ received_flip3(all_hands, scores) returned: ' + JSON.stringify(flip3Result) +
             '\n  Valid targets are: ' + validNames.join(', ') +
             '\n  scores = ' + JSON.stringify(sampleScores) +
             '\n  all_hands owners = ' + sampleAllHands.map(h=>h&&h.owner).join(', '));
@@ -2277,7 +2318,11 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\babs\(([^)]+)\)/g,   'Math.abs($1)');
   js = js.replace(/\bmax\(([^)]+)\)/g,   'Math.max($1)');
   js = js.replace(/\bmin\(([^)]+)\)/g,   'Math.min($1)');
-  js = js.replace(/\bprint\s*\([^)]*\)/g,'');
+  // Convert Python print() to consoleAppend so output shows in test console
+  // Convert Python print() to consoleAppend
+  js = js.replace(/\bprint\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+    function(_, args) { return "consoleAppend('flip_card: ' + String(" + args + "), 'dim')"; });
+
   js = js.replace(/\.isdigit\(\)/g, '.match(/^\\d+$/)/');
   // Integer division: a // b → Math.floor(a / b)
   js = js.replace(/(\w+[\w\]"'\)\s]*)\s*\/\/\s*(\w+[\w\[\]"'\s]*)/g, 'Math.floor($1 / $2)');
@@ -2421,7 +2466,15 @@ function extractPythonFn(rawCode, fnName, paramNames) {
     js = js.replace(/\bfloat\(([^)]+)\)/g,'parseFloat($1)');
     js = js.replace(/\bstr\(([^)]+)\)/g,'String($1)');
     js = js.replace(/\babs\(([^)]+)\)/g,'Math.abs($1)');
-    js = js.replace(/\bprint\s*\([^)]*\)/g,'');
+    // Convert Python print() to consoleAppend so output shows in test console
+  // Convert Python print() to consoleAppend
+  js = js.replace(/\bprint\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+    function(_, args) { return "consoleAppend('flip_card: ' + String(" + args + "), 'dim')"; });
+
+
+    // Convert Python print() to consoleAppend with function prefix
+    js = js.replace(/\bprint\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+      function(_, args) { return "consoleAppend('" + fnName + ": ' + String(" + args + "), 'dim')"; });
 
     js = convertIndentToBlocks(js);
 
@@ -2622,7 +2675,7 @@ function callReceivedFrozen(aiIdx) {
   }
 }
 
-// Call student's received_flip3(all_hands) → target name string
+// Call student's received_flip3(all_hands, scores) → target name string
 function callReceivedFlip3(aiIdx) {
   const fn = aiFunctions[aiIdx];
   if (!fn || !fn._flip3_fn) return null;
@@ -3523,7 +3576,7 @@ function clearTestConsole() {
   if (el) el.innerHTML = '<p class="console-line dim">— Cleared —</p>';
 }
 
-function consoleAppend(text, cls='') {
+window.consoleAppend = function consoleAppend(text, cls='') {
   const el = document.getElementById('test-console');
   if (!el) { console.log('[console]', text); return; }
   // Remove the placeholder if present
@@ -3755,6 +3808,18 @@ function extractErrorLine(errMsg) {
   return null;
 }
 
+
+// Render an avatar: try the image file, fallback to initial circle
+function avatarHTML(name, size) {
+  const cls = size === 'sm' ? 'avatar-sm' : '';
+  const initial = (name || '?')[0].toUpperCase();
+  // Color each player distinctively
+  const colors = { 'Player1': '#39ff6e', 'Bekah': '#c9a84c', 'Katie': '#5599ff', 'Mary': '#cc55ff' };
+  const col = colors[name] || 'var(--gold)';
+  return `<img class="avatar ${cls}" src="${name}.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" loading="lazy">` +
+         `<div class="avatar-fallback ${cls}" style="display:none;color:${col};border-color:${col}40;">${initial}</div>`;
+}
+
 window.onload = () => {
   const sampleDeck = buildDeck();
   document.getElementById('deck-count').textContent = sampleDeck.length;
@@ -3773,47 +3838,151 @@ window.onload = () => {
         return True
 
 def received_frozen(all_hands, scores):
-    return "Player1"
+    high_score = 0
+    high_name = ""
+    high_score2 = 0
+    high_name2 = ""
+    for names, total_score in scores.items():
+        if total_score > high_score:
+            high_score2 = high_score
+            high_score = total_score
+            high_name2 = high_name
+            high_name = names
+    if high_name == "Bekah":
+        high_name = high_name2
+    return high_name
 
 def received_flip3(all_hands, scores):
-    return "Player1"
+    most_cards = 0
+    most_name = "" 
+    points = 0
+    for hands in all_hands:
+        if hands["owner"] == "Bekah":
+            for x in range(13):
+                points += hands[str(x)] * x
+    if points < 13:
+        return "Bekah"
+    else:
+        for hands in all_hands:
+            num_cards = 0
+            for x in range(13):
+                num_cards += hands[str(x)]
+            if num_cards > most_cards:
+                most_name = hands["owner"]
+    return most_name
 `,
     `def flip_card(hand, all_hands, cards, scores):
+    answer = True
     points = 0
     for x in range(13):
         points += hand[str(x)] * x
-    if points > 25:
+    if hand["second_chance"] > 0:
+        answer = True
+    elif points > 25:
         return False
+    elif hand["12"] == 1 and hand["11"] == 1:
+        answer = False
+    elif hand["12"] == 1 and hand["11"] == 1 and hand["10"] == 1:
+        answer = False
+    elif hand["10"] == 1 and hand["12"] == 1:
+        answer = False
+    elif hand["10"] == 1 and hand["11"] == 1:
+        answer = False
+    elif points > 32:
+        answer = False
     else:
-        return True
+        answer = True
+    return answer
 
 def received_frozen(all_hands, scores):
-    return "Player1"
+    result = "Player1"
+    score = 0
+    for x, y in scores.items():
+        if x == "Katie":
+            score = score
+            result = result
+        elif y >= score:
+            score = y
+            result = x
+    return result
 
 def received_flip3(all_hands, scores):
-    return "Player1"
+    most_cards = 0
+    most_name = "Player1"
+    for h in all_hands:  
+        name = h["owner"]
+        num_cards = 0
+        for x in range(13):
+            num_cards += h[str(x)]
+        if name == "Katie":
+            most_cards = most_cards
+            most_name = most_name
+        elif num_cards > most_cards:
+            most_cards = num_cards
+            most_name = name
+    return most_name
 `,
     `def flip_card(hand, all_hands, cards, scores):
-    points = 0
-    for x in range(13):
-        points += hand[str(x)] * x
-    if points > 25:
-        return False
+    pick = False
+    my_hand = hand
+    if my_hand["12"] == 1 and my_hand["11"] == 1:
+        pick = False
+    elif my_hand["10"] == 1 and my_hand["11"] == 1:
+        pick = False
     else:
-        return True
+        pick = True
+    score = 0
+    for x in range(13):
+        score += hand[str(x)] * x
+        if score > 30:
+            pick = False
+    if hand["second_chance"] != 0:
+        pick = True
+    return pick
 
 def received_frozen(all_hands, scores):
-    return "Player1"
+    highest_score = 0
+    high_name = ""
+    for x, y in scores.items():
+        if x == "Mary":
+            high_name = "Katie"
+        else:
+            if scores[x] > highest_score:
+                highest_score = scores[x]
+                high_name = x
+    return high_name
 
 def received_flip3(all_hands, scores):
-    return "Player1"
+    highest_score = 0
+    high_name = ""
+    if scores["Mary"] < 10:
+        return "Mary"
+    else:
+        for x, y in scores.items():
+            if x == "Mary":
+                high_name = "Katie"
+            else:
+                if scores[x] > highest_score:
+                    highest_score = scores[x]
+                    high_name = x
+    return high_name
 `
-  ];
-  for (let i = 0; i < 3; i++) {
+  ];  for (let i = 0; i < 3; i++) {
     const ta = document.getElementById('code-' + i);
     if (ta && !ta.value.trim()) ta.value = defaultCodes[i];
   }
   randomizeTestData();
+  // Render avatars
+  const avatarDefs = [
+    { id: 'human-avatar-wrap',  name: 'Player1' },
+    { id: 'bekah-avatar-wrap',  name: 'Bekah', sm: true },
+    { id: 'katie-avatar-wrap',  name: 'Katie', sm: true },
+    { id: 'mary-avatar-wrap',   name: 'Mary',  sm: true },
+  ];
+  avatarDefs.forEach(({ id, name, sm }) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = avatarHTML(name, sm ? 'sm' : '');
+  });
   for (let i = 0; i < 4; i++) { updateLineNumbers(i); testCode(i); }
 };
 </script>
