@@ -2485,11 +2485,14 @@ function compilePythonToJS(rawCode) {
     /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*,\s*(-?\w+|-?\d+)\s*\)\s*:/g,
     'for (let $1 = $2; $1 < $3; $1 += $4):'
   );
-  // for x in <iterable>:  (a plain list/array, NOT range — those are handled above)
+  // for x in <iterable>:  (a plain list/array OR a dict — NOT range)
+  // Python iterates a list's ELEMENTS but a dict's KEYS. The transpiler has no
+  // type info, so it emits __pyiter(X) which decides at runtime: arrays yield
+  // their elements, plain objects yield their keys — matching Python exactly.
   // Must run before the `x in y` membership rewrite so it isn't corrupted.
   js = js.replace(
     /\bfor\s+(\w+)\s+in\s+([A-Za-z_$][\w$]*(?:\[[^\]]+\])?(?:\.[A-Za-z_$][\w$]*)*)\s*:/g,
-    'for (const $1 of $2):'
+    'for (const $1 of __pyiter($2)):'
   );
 
   // STEP 7: Dict/list methods
@@ -2577,6 +2580,7 @@ function compilePythonToJS(rawCode) {
   const autoVars = collectAssignedVars(js, reserved);
   const autoDecl = autoVars.length ? 'var ' + autoVars.join(', ') + ';\n' : '';
   const preamble = autoDecl +
+    `var __pyiter=function(o){return Array.isArray(o)?o:(o&&typeof o==='object'?Object.keys(o):o);};` +
     `var random={choice:function(a){return a[Math.floor(Math.random()*a.length)];},randint:function(a,b){return Math.floor(Math.random()*(b-a+1))+a;},shuffle:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}};`;
   const fn = new Function('hand','all_hands','cards','scores', `"use strict";\n${preamble}\n${js}`);
   // Smoke test
@@ -2722,7 +2726,7 @@ function extractPythonFn(rawCode, fnName, paramNames) {
     );
     js = js.replace(
       /\bfor\s+(\w+)\s+in\s+(\w+)\s*:/g,
-      'for (const $1 of $2):'
+      'for (const $1 of __pyiter($2)):'
     );
 
     // Built-ins
@@ -2756,6 +2760,7 @@ function extractPythonFn(rawCode, fnName, paramNames) {
     const autoVars = collectAssignedVars(js, paramNames);
     const autoDecl = autoVars.length ? 'var ' + autoVars.join(', ') + ';' : '';
     const preamble = autoDecl +
+      'var __pyiter=function(o){return Array.isArray(o)?o:(o&&typeof o===\'object\'?Object.keys(o):o);};' +
       'var random={choice:function(a){return a[Math.floor(Math.random()*a.length)];},randint:function(a,b){return Math.floor(Math.random()*(b-a+1))+a;},shuffle:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}};';
     // Build param aliases so variables are always accessible even with use strict
     const paramAliases = paramNames.map(p => 'var ' + p + ' = ' + p + ';').join(' ');
@@ -2826,9 +2831,9 @@ function convertIndentToBlocks(code) {
         // Already converted for..of: "for (const [k,v] of obj.entries())"
         jsLine = noColon + ' {';
       } else if (noColon.startsWith('for ')) {
-        // Python for..in (non-range) → for..of
+        // Python for..in (non-range) → for..of via __pyiter (handles dict & list)
         const m = noColon.match(/^for\s+(\w+)\s+in\s+(.+)$/);
-        jsLine = m ? `for (const ${m[1]} of ${m[2]}) {` : noColon + ' {';
+        jsLine = m ? `for (const ${m[1]} of __pyiter(${m[2]})) {` : noColon + ' {';
       } else if (noColon.startsWith('while ')) {
         const m = noColon.match(/^while\s+(.+)$/);
         jsLine = m ? `while (${m[1]}) {` : noColon + ' {';
