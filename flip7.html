@@ -157,10 +157,17 @@
   /* CENTER AREA — human player center */
   .center-area { grid-column: 2; grid-row: 3; }
 
-  /* STUDENT PLAYER PANELS */
-  .bekah-panel { grid-column: 1; grid-row: 2; margin-top: 3.5rem; }
+  /* STUDENT PLAYER PANELS
+     All three sit in row 2; their grid-column is assigned dynamically by
+     applySeatingLayout() so the visual seating matches the play order
+     (human always bottom-center). */
+  .bekah-panel { grid-column: 1; grid-row: 2; margin-top: 4rem; }
   .katie-panel  { grid-column: 2; grid-row: 2; }
-  .mary-panel   { grid-column: 3; grid-row: 2; margin-top: 3.5rem; }
+  .mary-panel   { grid-column: 3; grid-row: 2; margin-top: 4rem; }
+  /* Top-center seat sits lower (closer to row); side seats lifted. */
+  .seat-left  { grid-column: 1 !important; margin-top: 4rem !important; }
+  .seat-top   { grid-column: 2 !important; margin-top: 0 !important; }
+  .seat-right { grid-column: 3 !important; margin-top: 4rem !important; }
 
   /* SCOREBOARD + CONTROLS */
   .scoreboard { grid-column: 1 / 4; grid-row: 1; }
@@ -667,25 +674,19 @@
 
   /* ROUND RESULT — centered modal overlay */
   .round-result {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.78);
     display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 500;
-    backdrop-filter: blur(4px);
-    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
   }
-  .round-result.show { display: flex; }
+  .round-result.show { display: block; }
   .result-card {
-    background: rgba(6,22,11,0.98);
+    background: rgba(6,22,11,0.95);
     border: 2px solid var(--gold);
     border-radius: 16px;
-    padding: 1.8rem 2.2rem;
-    width: min(96vw, 1200px);
-    max-height: 90vh;
-    overflow-y: auto;
+    padding: 1.4rem 1.8rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .result-header {
@@ -896,8 +897,8 @@
     font-family: 'DM Mono', monospace;
     font-size: 0.75rem;
     line-height: 1.7;
-    min-height: 120px;
-    max-height: 340px;
+    min-height: 600px;
+    max-height: 600px;
     overflow-y: auto;
     color: #a8ffb8;
   }
@@ -958,9 +959,41 @@
     padding: 0.4rem 0.6rem;
     margin: 0;
     border-radius: 0;
-    min-height: 1100px;
-    height: 100%;
   }
+
+
+  /* PLAYER AVATARS */
+  .avatar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(201,168,76,0.4);
+    flex-shrink: 0;
+  }
+  .avatar-fallback {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    background: rgba(201,168,76,0.12);
+    color: var(--gold);
+  }
+  /* Smaller avatar for student panels */
+  .avatar-sm { width: 60px; height: 60px; font-size: 1.6rem; }
+  .avatar-sm.avatar { width: 60px; height: 60px; }
 
 </style>
 </head>
@@ -978,16 +1011,17 @@
   <div class="scoreboard" style="background:rgba(10,31,18,0.7);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:0.4rem 0.8rem;display:flex;align-items:center;gap:1rem;">
     <div class="score-grid" id="score-grid" style="flex:1;"></div>
     <div style="display:flex;gap:0.5rem;flex-shrink:0;">
-      <button class="btn-new" onclick="stopAndReset()" style="padding:0.3rem 0.9rem;font-size:0.7rem;color:var(--bust);border-color:rgba(232,85,85,0.4);">⏹ Stop</button>
-      <button class="btn-new" onclick="restartGame()" style="padding:0.3rem 0.9rem;font-size:0.7rem;">↺ Restart</button>
+      <button class="btn-new" onclick="stopAndReset()" style="padding:0.6rem 1.8rem;font-size:1.4rem;color:var(--bust);border-color:rgba(232,85,85,0.4);">⏹ Stop</button>
+      <button class="btn-new" onclick="restartGame()" style="padding:0.6rem 1.8rem;font-size:1.4rem;">↺ Restart</button>
     </div>
   </div>
 
-  <!-- ROW 2: THREE STUDENT PLAYERS SIDE BY SIDE -->
-  <!-- Bekah (left) -->
-  <div class="bekah-panel">
+  <!-- ROW 2: THREE STUDENT PLAYERS — columns assigned dynamically by applySeatingLayout() -->
+  <!-- Bekah -->
+  <div class="bekah-panel" id="panel-wrap-1">
     <div class="student-panel" id="bekah-section">
-      <div class="student-name-row">
+      <div class="student-name-row" style="display:flex;align-items:center;gap:0.4rem;">
+        <div id="bekah-avatar-wrap"></div>
         <div class="student-name" style="color:#c9a84c;" id="bekah-name-display">Bekah</div>
         <span class="status waiting" id="bekah-status">waiting</span>
       </div>
@@ -1001,10 +1035,11 @@
     </div>
   </div>
 
-  <!-- Katie (center) -->
-  <div class="katie-panel">
+  <!-- Katie -->
+  <div class="katie-panel" id="panel-wrap-2">
     <div class="student-panel" id="katie-section">
-      <div class="student-name-row">
+      <div class="student-name-row" style="display:flex;align-items:center;gap:0.4rem;">
+        <div id="katie-avatar-wrap"></div>
         <div class="student-name" style="color:#5599ff;" id="katie-name-display">Katie</div>
         <span class="status waiting" id="katie-status">waiting</span>
       </div>
@@ -1018,10 +1053,11 @@
     </div>
   </div>
 
-  <!-- Mary (right) -->
-  <div class="mary-panel">
+  <!-- Mary -->
+  <div class="mary-panel" id="panel-wrap-3">
     <div class="student-panel" id="mary-section">
-      <div class="student-name-row">
+      <div class="student-name-row" style="display:flex;align-items:center;gap:0.4rem;">
+        <div id="mary-avatar-wrap"></div>
         <div class="student-name" style="color:#cc55ff;" id="mary-name-display">Mary</div>
         <span class="status waiting" id="mary-status">waiting</span>
       </div>
@@ -1042,6 +1078,12 @@
     <div class="stat-row"><span class="stat-label">Round</span><span class="stat-value gold" id="round-num">1</span></div>
     <div class="stat-row"><span class="stat-label">Phase</span><span class="stat-value" id="phase-val">Setup</span></div>
 
+    <!-- Round-over mini summary -->
+    <div id="deck-round-summary" style="display:none;margin-top:0.9rem;border-top:1px solid rgba(201,168,76,0.25);padding-top:0.8rem;">
+      <div style="font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:0.12em;color:var(--gold);margin-bottom:0.3rem;">Round Over!</div>
+      <div id="deck-summary-winner" style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--neon-green);margin-bottom:0.6rem;font-weight:600;"></div>
+      <div id="deck-summary-scores"></div>
+    </div>
   </div>
 
   <!-- ROW 3 CENTER: HUMAN PLAYER -->
@@ -1051,7 +1093,7 @@
     </div>
 
     <div class="player-section" id="human-section">
-      <div class="player-name" id="human-display-name">You</div>
+      <div class="avatar-wrap"><div id="human-avatar-wrap"></div><div class="player-name" id="human-display-name">You</div></div>
       <div class="player-meta">
         <span>Score: <span class="score" id="human-score">0</span></span>
         <span class="status waiting" id="human-status">waiting</span>
@@ -1083,19 +1125,37 @@
     <div id="log-entries"></div>
   </div>
 
-  <!-- CODE + TEST DATA (side by side, full width) -->
-  <div style="grid-column:1/4;grid-row:4;display:flex;flex-direction:row;gap:1rem;align-items:stretch;">
-
-    <!-- CODE EDITOR SECTION -->
-    <div class="panel" style="flex:2;display:flex;flex-direction:column;min-width:0;">
-      <div class="panel-title">Student Implementations</div>
-    <div class="code-tabs">
-      <div class="code-tab active" onclick="switchTab(0)">Bekah</div>
-      <div class="code-tab" onclick="switchTab(1)">Katie</div>
-      <div class="code-tab" onclick="switchTab(2)">Mary</div>
+</div>
+<!-- ROUND RESULT — inline, below game area -->
+<div class="round-result" id="round-result">
+  <div class="result-card">
+    <div class="result-header">
+      <div class="result-title" id="result-title">Round Complete</div>
+      <div class="result-winner" id="result-winner"></div>
+      <div class="result-actions"></div>
     </div>
+    <div class="result-scores" id="result-scores"></div>
+  </div>
+</div>
 
-    <div class="code-box active" id="code-box-0">
+
+<div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 2rem;display:flex;flex-direction:column;gap:1rem;">
+
+
+  <!-- ROW 1: STUDENT IMPLEMENTATIONS + TEST DATA (side by side) -->
+  <div style="display:flex;flex-direction:row;gap:1rem;align-items:flex-start;">
+
+    <!-- LEFT: STUDENT IMPLEMENTATIONS -->
+    <div style="flex:1;min-width:0;">
+      <div class="panel">
+        <div class="panel-title">Student Implementations</div>
+        <div class="code-tabs">
+          <div class="code-tab active" onclick="switchTab(0)">Bekah</div>
+          <div class="code-tab" onclick="switchTab(1)">Katie</div>
+          <div class="code-tab" onclick="switchTab(2)">Mary</div>
+          <div class="code-tab" onclick="switchTab(3)" style="color:var(--frozen);">🤖 Player1 (AI)</div>
+        </div>
+<div class="code-box active" id="code-box-0">
       <div class="code-meta">
         <span>Player: <span class="player-tag" id="ai-name-display-0">Bekah</span></span>
         <span>def flip_card(hand, all_hands, cards, scores) → bool</span>
@@ -1118,7 +1178,13 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
-    <pre id="debug-0" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
+    <div id="debug-wrap-0" style="display:none;margin-top:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px;">
+      <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#ff8888;">⚠ Transpiler output</span>
+      <button onclick="document.getElementById('debug-wrap-0').style.display='none';" style="margin-left:auto;background:transparent;border:1px solid rgba(232,85,85,0.3);color:#ff8888;font-size:0.6rem;padding:1px 6px;border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;">✕ close</button>
+    </div>
+    <pre id="debug-0" style="background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:'DM Mono',monospace;margin:0;"></pre>
+  </div>
 
     <div class="code-box" id="code-box-1">
       <div class="code-meta">
@@ -1142,7 +1208,13 @@ def flip_card(hand, all_hands, cards):
         </label>
       </div>
     </div>
-    <pre id="debug-1" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
+    <div id="debug-wrap-1" style="display:none;margin-top:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px;">
+      <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#ff8888;">⚠ Transpiler output</span>
+      <button onclick="document.getElementById('debug-wrap-1').style.display='none';" style="margin-left:auto;background:transparent;border:1px solid rgba(232,85,85,0.3);color:#ff8888;font-size:0.6rem;padding:1px 6px;border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;">✕ close</button>
+    </div>
+    <pre id="debug-1" style="background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:'DM Mono',monospace;margin:0;"></pre>
+  </div>
 
     <div class="code-box" id="code-box-2">
       <div class="code-meta">
@@ -1167,50 +1239,110 @@ def flip_card(hand, all_hands, cards):
       </div>
         </div>
     </div>
-  <pre id="debug-2" style="display:none;background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:0.5rem;font-family:'DM Mono',monospace;"></pre>
+  <div id="debug-wrap-2" style="display:none;margin-top:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px;">
+      <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#ff8888;">⚠ Transpiler output</span>
+      <button onclick="document.getElementById('debug-wrap-2').style.display='none';" style="margin-left:auto;background:transparent;border:1px solid rgba(232,85,85,0.3);color:#ff8888;font-size:0.6rem;padding:1px 6px;border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;">✕ close</button>
+    </div>
+    <pre id="debug-2" style="background:#020c04;border:1px solid rgba(232,85,85,0.25);border-radius:6px;padding:0.6rem 0.8rem;font-size:0.65rem;color:#ff8888;overflow-x:auto;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:'DM Mono',monospace;margin:0;"></pre>
+    </div><!-- close code-box area -->
+
+    <div class="code-box" id="code-box-3">
+      <div class="code-meta">
+        <span>Player: <span class="player-tag">Player1 (AI)</span></span>
+        <span>Read-only reference implementation</span>
+      </div>
+      <div class="code-editor-wrap" id="editor-wrap-3">
+        <div class="line-numbers" id="line-nums-3">1</div>
+        <textarea class="code-input" id="code-3" spellcheck="false" oninput="updateLineNumbers(3)" onscroll="syncScroll(3)">def flip_card(hand, all_hands, cards, scores):
+    # A Second Chance cancels one bust, so drawing is always safe-ish
+    if hand["second_chance"] == 1:
+        return True
+    # Count cards still in the deck.
+    # Full deck = 94: one 0, N copies of card N (1..12), 9 action cards
+    # (3 each), and 6 modifier cards. cards[] tracks everything drawn
+    # since the last shuffle, so remaining = 94 - (cards drawn so far).
+    total_drawn = 0
+    for x in range(13):
+        total_drawn += cards[str(x)]
+    total_drawn += cards["second_chance"]
+    total_drawn += cards["freeze"]
+    total_drawn += cards["flip_three"]
+    total_drawn += cards["+2"]
+    total_drawn += cards["+4"]
+    total_drawn += cards["+6"]
+    total_drawn += cards["+8"]
+    total_drawn += cards["+10"]
+    total_drawn += cards["x2"]
+    cards_left = 94 - total_drawn
+    # Count the cards still in the deck that would bust her: any number
+    # she already holds. Card N has N copies; cards[str(N)] have been
+    # drawn (that count already includes her own copy).
+    busting_cards = 0
+    for x in range(13):
+        if hand[str(x)] == 1:
+            copies_left = x - cards[str(x)]
+            if copies_left > 0:
+                busting_cards += copies_left
+    # Probability the next draw is a busting duplicate.
+    if cards_left <= 0:
+        probability_of_busting = 0
+    else:
+        probability_of_busting = busting_cards / cards_left
+    if probability_of_busting > 0.35:
+        return False
+    else:
+        return True
+
+def received_frozen(all_hands, scores):
+    # Freeze the player with the highest score (not ourselves)
+    best_name = "Player1"
+    best_score = -1
+    for h in all_hands:
+        name = h["owner"]
+        if name == "Player1":
+            continue
+        s = scores[name]
+        if s > best_score:
+            best_score = s
+            best_name = name
+    return best_name
+
+def received_flip3(all_hands, scores):
+    # Flip3 onto the player with the most cards who is not us
+    most_cards = -1
+    most_name = "Player1"
+    for h in all_hands:
+        name = h["owner"]
+        if name == "Player1":
+            continue
+        num_cards = 0
+        for x in range(13):
+            num_cards += h[str(x)]
+        if num_cards > most_cards:
+            most_cards = num_cards
+            most_name = name
+    return most_name</textarea>
+      </div>
+      <div class="code-toolbar">
+        <button class="btn-test flashing" onclick="testCode(3)">▶ Test and Load Code</button>
+        <div class="code-status" id="status-3">ready</div>
+        <label style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+          Player: <span style="color:var(--frozen);font-family:'DM Mono',monospace;font-size:0.72rem;">Player1 (AI)</span>
+        </label>
+      </div>
+    </div>
+  </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TEST DATA -->
+    </div>
   </div>
 
-  <!-- TEST DATA PANEL -->
-
-    </div>
-
-    <!-- TEST DATA SECTION -->
-    <div class="panel" style="flex:1;display:flex;flex-direction:column;min-width:0;min-width:320px;">
-    <div class="panel-title">🧪 Test Data</div>
-    <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--text-muted);margin-bottom:0.6rem;line-height:1.5;">
-      Edit these JSON structures to test your code.<br>
-      "Test and Load Code" will use whatever is here.
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:0.5rem;flex:1;">
-
-      <div>
-        <div style="color:var(--gold);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;">hand (your hand)</div>
-        <textarea id="test-hand" class="code-input" style="min-height:120px;font-size:0.68rem;color:#a8ffb8;" spellcheck="false"></textarea>
-      </div>
-
-      <div>
-        <div style="color:var(--gold);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;">all_hands (all players)</div>
-        <textarea id="test-all-hands" class="code-input" style="min-height:140px;font-size:0.68rem;color:#a8ffb8;" spellcheck="false"></textarea>
-      </div>
-
-      <div>
-        <div style="color:var(--gold);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;">scores</div>
-        <textarea id="test-scores" class="code-input" style="min-height:75px;font-size:0.68rem;color:#a8ffb8;" spellcheck="false"></textarea>
-      </div>
-
-      <div>
-        <div style="color:var(--gold);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;">cards (played tracker)</div>
-        <textarea id="test-cards" class="code-input" style="min-height:120px;font-size:0.68rem;color:#a8ffb8;" spellcheck="false"></textarea>
-      </div>
-
-      <button class="btn-new" onclick="randomizeTestData()" style="align-self:flex-start;margin-top:0.3rem;">↺ Randomize</button>
-    </div>
-  </div>
-    </div>
-
-  </div>
-
+  <!-- ROW 2: TEST RESULTS CONSOLE -->
+  <!-- TEST RESULTS CONSOLE -->
+<!-- ROW 2: TEST RESULTS CONSOLE -->
   <!-- TEST RESULTS CONSOLE -->
   <div style="grid-column:1/4;grid-row:5;background:var(--panel);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:1.2rem;backdrop-filter:blur(10px);">
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;">
@@ -1222,6 +1354,49 @@ def flip_card(hand, all_hands, cards):
     </div>
   </div>
 
+  <!-- ROW 3: TEST INPUT DATA -->
+<!-- TEST DATA: 4 equal panels side-by-side -->
+  <div style="display:flex;flex-direction:row;gap:0.6rem;align-items:flex-start;width:100%;">
+
+      <!-- hand -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="display:flex;align-items:baseline;gap:0.4rem;margin-bottom:2px;">
+          <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;">hand</div>
+          <div id="test-hand-owner" style="color:var(--neon-green);font-family:'DM Mono',monospace;font-size:0.52rem;margin-left:auto;"></div>
+        </div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.55rem;margin-bottom:4px;">Current player's hand. 1=have, 0=don't.</div>
+        <textarea id="test-hand" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;min-height:360px;" spellcheck="false"></textarea>
+      </div>
+
+      <!-- all_hands -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;">all_hands</div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.55rem;margin-bottom:4px;">All 4 players' hands array.</div>
+        <textarea id="test-all-hands" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;min-height:360px;" spellcheck="false"></textarea>
+      </div>
+
+      <!-- cards -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;">cards</div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.55rem;margin-bottom:4px;">Cards drawn since last shuffle.</div>
+        <textarea id="test-cards" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;min-height:360px;" spellcheck="false"></textarea>
+      </div>
+
+      <!-- scores -->
+      <div class="panel" style="flex:1;min-width:0;padding:0.7rem 0.8rem;">
+        <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:2px;">
+          <div style="color:var(--gold);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;">scores</div>
+          <button class="btn-new" onclick="randomizeTestData()" style="margin-left:auto;padding:0.12rem 0.5rem;font-size:0.55rem;">↺</button>
+        </div>
+        <div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.55rem;margin-bottom:4px;">Player name → game total.</div>
+        <textarea id="test-scores" class="code-input" style="font-size:0.66rem;color:#a8ffb8;width:100%;box-sizing:border-box;min-height:360px;" spellcheck="false"></textarea>
+      </div>
+
+  </div>
+
+  <!-- ROW 4: STUDENT API REFERENCE -->
+  <!-- README -->
+<!-- ROW 3: STUDENT API REFERENCE -->
   <!-- README -->
   <div style="grid-column:1/4;grid-row:6;background:var(--panel);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:1.2rem;backdrop-filter:blur(10px);">
     <div class="panel-title">📖 Student API Reference</div>
@@ -1240,6 +1415,7 @@ def flip_card(hand, all_hands, cards):
   "+2": 0, "+4": 0, "+6": 0, "+8": 0, "+10": 0, "x2": 0,  # modifier cards
   "second_chance": 0,  "freeze": 0,  "flip_three": 0,       # special cards
   "is_busted": 0,      # 1 if you are busted, 0 if not
+  "is_frozen": 0,      # 1 if you are currently frozen out of the round, 0 if not
   "owner": "Bekah"     # your player name
 }</pre>
 
@@ -1284,10 +1460,11 @@ def flip_card(hand, all_hands, cards):
 
       <!-- received_flip3 -->
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(204,85,255,0.25);border-radius:8px;padding:1rem 1.2rem;margin-bottom:0.5rem;">
-        <div style="color:#cc55ff;font-size:0.82rem;margin-bottom:0.5rem;">def received_flip3(all_hands) → str</div>
+        <div style="color:#cc55ff;font-size:0.82rem;margin-bottom:0.5rem;">def received_flip3(all_hands, scores) → str</div>
         <div style="color:var(--text-muted);margin-bottom:0.7rem;">Called when you draw a <span style="color:#cc55ff;">Flip Three ⚡</span> card. Return the <strong>name</strong> of the player you want to force-flip 3 cards onto (can be yourself!).</div>
 
         <div style="color:var(--gold);margin-bottom:0.3rem;font-size:0.75rem;">▸ all_hands — same list of all players' hands as in flip_card (see above)</div>
+        <div style="color:var(--gold);margin-bottom:0.3rem;font-size:0.75rem;margin-top:0.4rem;">▸ scores — same scores dict as in received_frozen (see above)</div>
 
         <div style="color:var(--gold);margin-bottom:0.2rem;font-size:0.75rem;margin-top:0.5rem;">▸ Valid return values:</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.3rem;">
@@ -1312,6 +1489,87 @@ def flip_card(hand, all_hands, cards):
     </div>
   </div>
 
+  <!-- ROW 5: HOW THE SIMULATOR PLAYS — plain-English rules for review -->
+  <div style="grid-column:1/4;background:var(--panel);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:1.4rem 1.6rem;backdrop-filter:blur(10px);">
+    <div class="panel-title">📜 How This Simulator Plays Flip 7</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:0.84rem;line-height:1.7;color:var(--text-light);max-width:980px;">
+
+      <p style="color:var(--text-muted);margin-bottom:1rem;font-style:italic;">
+        This is a written description of exactly what the code does, so you can check it against the
+        real rules of Flip 7. If anything below is wrong, the simulator is wrong — tell me and I'll fix it.
+      </p>
+
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;margin:0.6rem 0 0.4rem;">The deck (94 cards)</div>
+      <p style="margin-bottom:0.9rem;color:var(--text-light);">
+        Built fresh and shuffled with a Fisher–Yates shuffle. It contains:
+        one <strong>0</strong> card; for every number 1–12, that many copies of the card
+        (one 1, two 2s, three 3s … twelve 12s = 78 number cards);
+        three <strong>Second Chance</strong>, three <strong>Freeze</strong>, three <strong>Flip Three</strong> cards;
+        and one each of the modifier cards <strong style="color:#ff9800;">+2, +4, +6, +8, +10, ×2</strong>.
+        The deck <strong>persists across rounds</strong> — it is only rebuilt and reshuffled when it runs completely empty,
+        which matches the real game. The <code>cards</code> dict passed to your code tracks every card drawn since the last shuffle.
+      </p>
+
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;margin:0.6rem 0 0.4rem;">Turn order</div>
+      <p style="margin-bottom:0.9rem;color:var(--text-light);">
+        Four players: <strong>Player1</strong> (you / the AI tab), <strong>Bekah</strong>, <strong>Katie</strong>, <strong>Mary</strong>.
+        Play goes clockwise. The player who goes first <strong>rotates each round</strong> (Round 1 starts with Player1,
+        Round 2 with Bekah, and so on). Within a round, players keep taking turns in order, lap after lap,
+        until every player is "done". A player is <strong>done</strong> when they have <em>busted</em>, <em>held</em>, or been <em>frozen</em>.
+        Done players are skipped on later laps.
+      </p>
+
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;margin:0.6rem 0 0.4rem;">A single turn</div>
+      <p style="margin-bottom:0.5rem;color:var(--text-light);">On your turn the simulator calls <code>flip_card(...)</code> and asks: flip or hold?</p>
+      <ul style="margin:0 0 0.9rem 1.2rem;color:var(--text-light);">
+        <li style="margin-bottom:0.3rem;">If your code returns <strong style="color:var(--bust);">False</strong> → you <strong>hold</strong>. You take no card, you are done for the round, and your points are locked in.</li>
+        <li style="margin-bottom:0.3rem;">If your code returns <strong style="color:var(--neon-green);">True</strong> → you <strong>draw one card</strong> off the top of the deck, and that card is resolved (see below).</li>
+        <li style="margin-bottom:0.3rem;">If your code <strong>errors or fails to compile</strong>, the simulator treats it as a hold (a code error is counted and reported in the results).</li>
+      </ul>
+
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;margin:0.6rem 0 0.4rem;">What each drawn card does</div>
+      <ul style="margin:0 0 0.9rem 1.2rem;color:var(--text-light);">
+        <li style="margin-bottom:0.35rem;"><strong>Number card you don't have yet</strong> → added to your hand. If this gives you <strong>7 different number cards</strong>, that is a <strong style="color:var(--neon-green);">Flip 7</strong>: the round ends immediately for everyone, and you get a <strong>+15 bonus</strong>.</li>
+        <li style="margin-bottom:0.35rem;"><strong>Number card you already have (a duplicate)</strong> → you <strong style="color:var(--bust);">BUST</strong>. Your score for the round is 0 — unless you are holding a <strong style="color:#5599ff;">Second Chance</strong>, in which case the Second Chance is consumed and you are saved (the duplicate is discarded, no card added).</li>
+        <li style="margin-bottom:0.35rem;"><strong style="color:#ff9800;">Modifier card (+2…+10, ×2)</strong> → kept in your hand, applied at scoring time. Does not count toward the 7-card Flip 7.</li>
+        <li style="margin-bottom:0.35rem;"><strong style="color:#5599ff;">Second Chance</strong> → kept in your hand as protection against your next duplicate.</li>
+        <li style="margin-bottom:0.35rem;"><strong style="color:#5599ff;">Freeze ❄</strong> → your code's <code>received_frozen(...)</code> picks a player to freeze. That player is immediately done for the round (their points are banked safely). You may freeze yourself if you choose to. If your code returns an invalid name, the simulator freezes the highest-scoring eligible player instead.</li>
+        <li style="margin-bottom:0.35rem;"><strong style="color:#cc55ff;">Flip Three ⚡</strong> → your code's <code>received_flip3(...)</code> picks a player (can be yourself). That player is forced to draw <strong>3 cards in a row</strong>, each resolved by the same rules above. The forced draws stop early if the target busts or hits Flip 7. A Flip Three drawn during a Flip Three is just kept — it does not chain.</li>
+      </ul>
+
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;margin:0.6rem 0 0.4rem;">Scoring a round</div>
+      <p style="margin-bottom:0.5rem;color:var(--text-light);">When everyone is done, each hand is scored in this order:</p>
+      <ol style="margin:0 0 0.9rem 1.2rem;color:var(--text-light);">
+        <li style="margin-bottom:0.3rem;">A busted hand scores <strong style="color:var(--bust);">0</strong> for the round.</li>
+        <li style="margin-bottom:0.3rem;">Otherwise, add up the face values of your number cards (0–12).</li>
+        <li style="margin-bottom:0.3rem;">If you have exactly <strong>7 number cards</strong>, add the <strong>+15</strong> Flip 7 bonus to that sum.</li>
+        <li style="margin-bottom:0.3rem;">If you have the <strong style="color:#ff9800;">×2</strong> card, <strong>double</strong> the total so far (numbers + Flip 7 bonus).</li>
+        <li style="margin-bottom:0.3rem;">Finally, add your <strong style="color:#ff9800;">+2 / +4 / +6 / +8 / +10</strong> modifier cards. These are added <em>after</em> the ×2 — they are not doubled.</li>
+      </ol>
+
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;margin:0.6rem 0 0.4rem;">Winning the game</div>
+      <p style="margin-bottom:0.9rem;color:var(--text-light);">
+        Round scores accumulate into each player's running total. As soon as <strong>any player reaches 200 or more total points</strong>,
+        the game ends after that round. The player with the <strong>highest total score</strong> wins.
+        In the batch simulator, ties (equal high scores) currently count as a win for <em>every</em> tied player.
+      </p>
+
+      <div style="background:rgba(232,85,85,0.07);border:1px solid rgba(232,85,85,0.22);border-radius:8px;padding:0.8rem 1rem;margin-top:0.6rem;">
+        <div style="color:#ff9d6e;font-size:0.78rem;margin-bottom:0.3rem;">⚠ Known simplifications — please confirm these are acceptable</div>
+        <ul style="margin:0.2rem 0 0 1.1rem;color:var(--text-muted);font-size:0.8rem;line-height:1.6;">
+          <li>When a player's code returns an invalid Freeze/Flip-Three target, the simulator picks a fallback automatically rather than forfeiting the card.</li>
+          <li>The Freeze <em>fallback</em> never freezes the drawer themselves (a student's code still may, by returning their own name).</li>
+          <li>Ties for the high score are scored as a win for each tied player, not as "no winner".</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+
+</div>
+
+</div>
 
 </div>
 
@@ -1352,28 +1610,13 @@ def flip_card(hand, all_hands, cards):
 
 <!-- SIM RESULTS MODAL -->
 <div class="pick-modal" id="sim-results-modal">
-  <div class="pick-card" style="max-width:540px;">
+  <div class="pick-card" style="max-width:620px;">
     <div class="pick-title" id="sim-results-title">Simulation Results</div>
     <div id="sim-results-body" style="margin:1rem 0;"></div>
     <div style="display:flex;gap:0.8rem;justify-content:center;margin-top:1rem;">
       <button class="btn btn-deal" onclick="document.getElementById('sim-results-modal').classList.remove('show');chooseAIMode();" style="font-size:1rem;padding:0.5rem 1.5rem;">Run Again</button>
       <button class="btn-new" onclick="exitSimulator()">Exit to Human Mode</button>
     </div>
-  </div>
-</div>
-
-<!-- ROUND RESULT BANNER -->
-<div class="round-result" id="round-result">
-  <div class="result-card">
-    <div class="result-header">
-      <div class="result-title" id="result-title">Round Complete</div>
-      <div class="result-winner" id="result-winner"></div>
-      <div class="result-actions">
-        <button class="btn btn-deal" id="result-next-btn" onclick="closeResult()" style="font-size:0.9rem;padding:0.45rem 1.3rem;">Next Round</button>
-        <button class="btn-new" onclick="newGame()">New Game</button>
-      </div>
-    </div>
-    <div class="result-scores" id="result-scores"></div>
   </div>
 </div>
 
@@ -1444,148 +1687,208 @@ function startSimulator(n) {
   const names   = getNames();
   const wins    = [0, 0, 0, 0];   // game wins per player
   const totals  = [0, 0, 0, 0];   // total score across all games
+  const displayNamesShort = [names[0]==='Player1'?'Player1':names[0], names[1], names[2], names[3]];
 
+  // Clear and set up console for game log
+  clearTestConsole();
+  consoleAppend('=== Simulator: ' + n.toLocaleString() + ' game' + (n>1?'s':'') + ' ===', 'header');
+  consoleAppend('Players: ' + displayNamesShort.join(', '), 'dim');
+  consoleSep();
+
+  // Error tracking — outside the loop so totalErrors is accessible after
+  const errorCounts = [0, 0, 0, 0];
+  // Per-player aggregate statistics across the whole simulation run.
+  // All indexed by player-identity index (0=Player1, 1=Bekah, 2=Katie, 3=Mary).
+  const turnsTaken  = [0, 0, 0, 0];  // total decision points (a flip-or-hold ask)
+  const bustCount   = [0, 0, 0, 0];  // times the player busted
+  const holdCount   = [0, 0, 0, 0];  // times the player chose to hold
+  const frozenCount = [0, 0, 0, 0];  // times the player was frozen out of a round
+  const roundsPlayed= [0, 0, 0, 0];  // rounds this player participated in
+  const ledCount    = [0, 0, 0, 0];  // rounds this player started as the score leader
+  function simCall(fn, playerIdx, ...args) {
+    if (!fn) return null;
+    try { return fn(...args); }
+    catch(e) {
+      if (playerIdx >= 0 && playerIdx < 4) errorCounts[playerIdx]++;
+      return null;
+    }
+  }
+
+  // Fisher–Yates shuffle of [0,1,2,3] → random seating order for one game.
+  // seatOrder[s] = player-identity index sitting in seat s.
+  function randomSeatOrder() {
+    const a = [0, 1, 2, 3];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const simStartTime = Date.now();
   for (let g = 0; g < n; g++) {
     const gameScores = [0, 0, 0, 0];
+    // Random seating order for this game — Player1 no longer always starts first.
+    // seatOrder is a permutation of player-identity indices [0..3].
+    const seatOrder = randomSeatOrder();
+    // Deck persists across rounds (reshuffled only when empty) — like the real game
     let deck   = buildDeck();
     let played = emptyPlayedCards();
 
-    function simDraw() {
+    function simDraw2() {
       if (deck.length === 0) { deck = buildDeck(); played = emptyPlayedCards(); }
       const card = deck.pop();
       played[card.value] = (played[card.value] || 0) + 1;
       return card;
     }
 
-    // Call a student's fn safely — returns result or null on error
-    function simCall(fn, ...args) {
-      if (!fn) return null;
-      try { return fn(...args); } catch(e) { return null; }
+    function h_done(h) { return !!(h.is_busted || h._held || h._frozen); }
+
+    // Get the function for a player index (0 = AI/Player1 tab, 1-3 = students)
+    function getFn(idx) {
+      if (idx === 0) return aiFunctions[3];   // Player1 uses tab 3
+      return aiFunctions[idx - 1];            // Students use tabs 0-2
     }
 
-    // Resolve freeze target using student's received_frozen, fallback to highest scorer
-    function simResolveFreeze(drawerIdx, hands, gameScores) {
-      const simScoresDict = {}; names.forEach((nm,si) => simScoresDict[nm] = gameScores[si]);
-      const allHandsPublic = hands.map(publicHand);
-      const eligible = hands.map((h,i) => i).filter(i => !h_isDone(hands[i]));
-      if (!eligible.length) return -1;
-      let targetName = null;
-      if (drawerIdx === 0) {
-        // Player1 AI: freeze the player with the highest score
-        let best = -1;
-        for (const i of eligible) {
-          if (gameScores[i] > best) { best = gameScores[i]; targetName = names[i]; }
-        }
-      } else {
-        const fn = aiFunctions[drawerIdx - 1];
-        targetName = simCall(fn && fn._frozen_fn, allHandsPublic, simScoresDict);
+    // Safely call a function, count errors
+    function safeCall(fn, playerIdx, args) {
+      if (!fn || fn._compileError) return null;
+      try { return fn(...args); }
+      catch(e) { errorCounts[playerIdx]++; return null; }
+    }
+
+    // Resolve who to freeze
+    function resolveFreeze2(drawerIdx, hands) {
+      const sDict = {}; names.forEach((nm,i) => sDict[nm] = gameScores[i]);
+      const allPub = hands.map(publicHand);
+      const fn = getFn(drawerIdx);
+      const res = fn && fn._frozen_fn ? safeCall(fn._frozen_fn, drawerIdx, [allPub, sDict]) : null;
+      const tidx = names.indexOf(res);
+      if (tidx >= 0 && !h_done(hands[tidx])) return tidx;
+      // Fallback: highest scorer who isn't the drawer and isn't done
+      let best = -1, bestIdx = -1;
+      for (let i = 0; i < 4; i++) {
+        if (i === drawerIdx || h_done(hands[i])) continue;
+        if (gameScores[i] > best) { best = gameScores[i]; bestIdx = i; }
       }
-      const idx = names.indexOf(targetName);
-      return (idx >= 0 && eligible.includes(idx)) ? idx : eligible[0];
+      return bestIdx;
     }
 
-    // Resolve flip3 target using student's received_flip3, fallback to most cards
-    function simResolveFlip3(drawerIdx, hands, gameScores) {
-      const simScoresDict = {}; names.forEach((nm,si) => simScoresDict[nm] = gameScores[si]);
-      const allHandsPublic = hands.map(publicHand);
-      const eligible = hands.map((h,i) => i).filter(i => !h_isDone(hands[i]));
-      if (!eligible.length) return -1;
-      let targetName = null;
-      if (drawerIdx === 0) {
-        // Player1 AI: flip3 onto player with most cards
-        let most = -1;
-        for (const i of eligible) {
-          const cnt = cardCount(hands[i]);
-          if (cnt > most) { most = cnt; targetName = names[i]; }
-        }
-      } else {
-        const fn = aiFunctions[drawerIdx - 1];
-        targetName = simCall(fn && fn._flip3_fn, allHandsPublic, simScoresDict);
+    // Resolve who to flip3 onto
+    function resolveFlip3_2(drawerIdx, hands) {
+      const sDict = {}; names.forEach((nm,i) => sDict[nm] = gameScores[i]);
+      const allPub = hands.map(publicHand);
+      const fn = getFn(drawerIdx);
+      const res = fn && fn._flip3_fn ? safeCall(fn._flip3_fn, drawerIdx, [allPub, sDict]) : null;
+      const tidx = names.indexOf(res);
+      if (tidx >= 0 && !h_done(hands[tidx])) return tidx;
+      // Fallback: most cards among active players
+      let most = -1, mostIdx = -1;
+      for (let i = 0; i < 4; i++) {
+        if (i === drawerIdx || h_done(hands[i])) continue;
+        const cnt = cardCount(hands[i]);
+        if (cnt > most) { most = cnt; mostIdx = i; }
       }
-      const idx = names.indexOf(targetName);
-      return (idx >= 0 && eligible.includes(idx)) ? idx : eligible[0];
+      return mostIdx;
     }
 
-    function h_isDone(h) { return h.is_busted || h._held || h._frozen; }
-
-    // Apply 3 forced cards to a target (handles freeze/flip3 recursion simply)
-    function simApplyFlip3(tgtIdx, hands, depth) {
-      if (depth > 3) return; // prevent infinite flip3 chains
-      for (let fc = 0; fc < 3 && !h_isDone(hands[tgtIdx]); fc++) {
-        const fc2 = simDraw();
-        const htgt = hands[tgtIdx];
-        if (fc2.type === 'number') {
-          if (htgt[fc2.value] === 1) {
-            if (htgt.second_chance === 1) { htgt.second_chance = 0; }
-            else { htgt.is_busted = 1; break; }
+    // Apply 3 forced cards to a target
+    function applyFlip3_2(tgtIdx, hands) {
+      for (let fc = 0; fc < 3; fc++) {
+        if (h_done(hands[tgtIdx])) break;
+        const card = simDraw2();
+        const h = hands[tgtIdx];
+        if (card.type === 'number') {
+          if (h[card.value] === 1) {
+            if (h.second_chance === 1) { h.second_chance = 0; }
+            else { h.is_busted = 1; h._bust_card = card.value; break; }
           } else {
-            htgt[fc2.value] = 1;
-            if (cardCount(htgt) >= 7) {
-              hands.forEach(h => { if (!h.is_busted) h._held = true; });
-              return;
-            }
+            h[card.value] = 1;
+            if (cardCount(h) >= 7) { hands.forEach(hh => { if (!hh.is_busted) hh._held = true; }); return true; }
           }
-        } else if (fc2.type === 'modifier') {
-          htgt[fc2.value] = 1;
-        } else if (fc2.value === 'freeze') {
-          htgt.freeze = 1;
-          const freezeTgt = simResolveFreeze(tgtIdx, hands, gameScores);
-          if (freezeTgt >= 0 && !h_isDone(hands[freezeTgt])) {
-            hands[tgtIdx].freeze = 0;
-            hands[freezeTgt].freeze = 1;
-            hands[freezeTgt]._frozen = true;
-          }
-        } else if (fc2.value === 'flip_three') {
-          htgt.flip_three = 1;
-          // Don't recurse flip3-in-flip3 too deeply
-        } else {
-          htgt[fc2.value] = 1;
-        }
+        } else if (card.type === 'modifier') {
+          h[card.value] = 1;
+        } else if (card.value === 'second_chance') {
+          h.second_chance = 1;
+        } else if (card.value === 'freeze') {
+          h.freeze = 1;
+          const ft = resolveFreeze2(tgtIdx, hands);
+          if (ft >= 0) { h.freeze = 0; hands[ft].freeze = 1; hands[ft]._frozen = true; frozenCount[ft]++; }
+        } else { h[card.value] = 1; }
       }
+      return false;
     }
 
     let round = 0;
-    while (gameScores.every(s => s < 200) && round < 200) {
+    let roundFlip7 = false;
+    while (gameScores.every(s => s < 200) && round < 400) {
       round++;
       const hands = names.map(nm => emptyHand(nm));
-      let firstIdx = round % 4; // rotate start player clockwise
+      // First seat rotates each round; turn order walks the random seatOrder.
+      const firstSeat = (round - 1) % 4;
+      roundFlip7 = false;
 
+      // ── Stats: who is leading at the start of this round? ──
+      // Round 1 starts with everyone tied at 0 → no leader credited.
+      [0,1,2,3].forEach(i => roundsPlayed[i]++);
+      if (round > 1) {
+        const maxScore = Math.max(...gameScores);
+        // Credit every player tied for the lead (handles ties fairly).
+        for (let i = 0; i < 4; i++) {
+          if (gameScores[i] === maxScore) ledCount[i]++;
+        }
+      }
+
+      // Round: keep taking turns until everyone is done or flip7 triggers
       let safety = 0;
-      while (!hands.every(h_isDone) && safety++ < 5000) {
-        // One full rotation
+      while (!hands.every(h_done) && !roundFlip7 && safety++ < 2000) {
+        // One turn per active player, walking the random seating order
         for (let offset = 0; offset < 4; offset++) {
-          const idx = (firstIdx + offset) % 4;
+          const seat = (firstSeat + offset) % 4;
+          const idx  = seatOrder[seat];   // player-identity index for this seat
           const h = hands[idx];
-          if (h_isDone(h)) continue;
+          if (h_done(h)) continue;
 
-          // Build inputs matching the real game
-          const simScoresDict = {}; names.forEach((nm,si) => simScoresDict[nm] = gameScores[si]);
+          const sDict = {}; names.forEach((nm,i) => sDict[nm] = gameScores[i]);
 
-          // Ask: does this player want a card?
+          // ── Ask player: flip or hold? ──────────────────────────────────
+          turnsTaken[idx]++;
           let wants = false;
           if (idx === 0) {
-            wants = player1AIDecision(h, deck, played);
+            // Player1 (AI tab)
+            const fn0 = getFn(0);
+            if (fn0 && !fn0._compileError) {
+              const res = safeCall(fn0, 0, [publicHand(h), hands.map(publicHand), Object.assign({}, played), sDict]);
+              wants = (res === true || res === 1);
+            } else {
+              // Fallback: built-in AI
+              wants = player1AIDecision(h, deck, played);
+            }
           } else {
-            const fn = aiFunctions[idx - 1];
-            if (!fn) { h._held = true; continue; }
-            const result = simCall(fn, publicHand(h), hands.map(publicHand), Object.assign({}, played), simScoresDict);
-            wants = result === true || result === 1;
+            // Student player
+            const fn = getFn(idx);
+            if (!fn || fn._compileError) { h._held = true; holdCount[idx]++; continue; }
+            const res = safeCall(fn, idx, [publicHand(h), hands.map(publicHand), Object.assign({}, played), sDict]);
+            wants = (res === true || res === 1);
+            if (res === null && !fn._compileError) { h._held = true; holdCount[idx]++; continue; } // error → hold
           }
 
-          if (!wants) { h._held = true; continue; }
+          if (!wants) { h._held = true; holdCount[idx]++; continue; }
 
-          // Draw a card
-          const card = simDraw();
+          // ── Draw a card ──────────────────────────────────────────────────
+          const card = simDraw2();
 
           if (card.type === 'number') {
             if (h[card.value] === 1) {
               if (h.second_chance === 1) { h.second_chance = 0; }
-              else { h.is_busted = 1; h._bust_card = card.value; }
+              else { h.is_busted = 1; h._bust_card = card.value; bustCount[idx]++; }
             } else {
               h[card.value] = 1;
               if (cardCount(h) >= 7) {
+                // Flip 7 — round ends immediately, this player gets +15
                 hands.forEach(hh => { if (!hh.is_busted) hh._held = true; });
-                break;
+                roundFlip7 = true;
+                break; // break the for loop; while condition will also exit
               }
             }
           } else if (card.type === 'modifier') {
@@ -1594,46 +1897,97 @@ function startSimulator(n) {
             h.second_chance = 1;
           } else if (card.value === 'freeze') {
             h.freeze = 1;
-            const freezeTgt = simResolveFreeze(idx, hands, gameScores);
-            if (freezeTgt >= 0 && !h_isDone(hands[freezeTgt])) {
-              h.freeze = 0;
-              hands[freezeTgt].freeze = 1;
-              hands[freezeTgt]._frozen = true;
-            }
+            const ft = resolveFreeze2(idx, hands);
+            if (ft >= 0) { h.freeze = 0; hands[ft].freeze = 1; hands[ft]._frozen = true; frozenCount[ft]++; }
           } else if (card.value === 'flip_three') {
-            const flip3Tgt = simResolveFlip3(idx, hands, gameScores);
-            if (flip3Tgt >= 0) {
-              h.flip_three = 0;
-              hands[flip3Tgt].flip_three = 1;
-              simApplyFlip3(flip3Tgt, hands, 0);
+            const fl = resolveFlip3_2(idx, hands);
+            if (fl >= 0) {
+              h.flip_three = 0; hands[fl].flip_three = 1;
+              if (applyFlip3_2(fl, hands)) { roundFlip7 = true; break; }
             }
+          } else {
+            h[card.value] = 1; // other specials (second_chance already handled)
           }
         }
-        if (hands.every(h_isDone)) break;
       }
 
-      // Score this round
+      if (safety >= 2000) console.warn('Safety limit hit in game', g+1, 'round', round);
+    // ── Score the round ──────────────────────────────────────────────
       hands.forEach((h, i) => {
         if (h.is_busted) return;
-        const _num  = handNumTotal(h);
-        const _f7   = cardCount(h) === 7 ? 15 : 0;
-        const _base = h['x2'] === 1 ? (_num + _f7) * 2 : (_num + _f7);
-        gameScores[i] += _base + handModBonus(h);
+        const numPts = handNumTotal(h);
+        const flip7bonus = cardCount(h) === 7 ? 15 : 0;
+        const base = h['x2'] === 1 ? (numPts + flip7bonus) * 2 : (numPts + flip7bonus);
+        gameScores[i] += base + handModBonus(h);
       });
     }
 
-    // Game winner = highest score
+    // Tally game winner
     const maxS = Math.max(...gameScores);
-    const winnerIdx = gameScores.indexOf(maxS);
-    wins[winnerIdx]++;
+    let winnerIdx = gameScores.indexOf(maxS);
+    gameScores.forEach((s, i) => { if (s === maxS) wins[i]++; });
     gameScores.forEach((s, i) => totals[i] += s);
+
+    // Log this game's result to the console
+    const scoreStr = displayNamesShort.map((nm, i) => '"' + nm + '": ' + gameScores[i]).join(', ');
+    const winnerMark = displayNamesShort[winnerIdx];
+    consoleAppend('Game ' + (g+1) + ' (' + round + ' rounds): {' + scoreStr + '}  ← ' + winnerMark + ' wins', g === 0 ? 'ok' : '');
   }
+
+  // Log summary to console
+  const simMs = Date.now() - simStartTime;
+  consoleSep();
+  consoleAppend('=== Final Tally after ' + n.toLocaleString() + ' game' + (n>1?'s':'') + ' (' + simMs + 'ms) ===', 'header');
+  const sortedIdx = [0,1,2,3].sort((a,b) => wins[b]-wins[a]);
+  sortedIdx.forEach(i => {
+    const pct = (wins[i]/n*100).toFixed(1);
+    const avg = (totals[i]/n).toFixed(1);
+    consoleAppend((i===sortedIdx[0]?'🏆 ':'   ') + displayNamesShort[i] + ': ' + wins[i].toLocaleString() + ' wins (' + pct + '%) avg ' + avg + ' pts', i===sortedIdx[0]?'ok':'');
+  });
 
   // Show results
   const displayNames = names.map((nm, i) => i === 0 ? 'Player1 (AI)' : nm);
-  document.getElementById('sim-results-title').textContent = `Results: ${n.toLocaleString()} Game${n>1?'s':''} Simulated`;
+  const totalErrors = errorCounts.reduce((s,v) => s+v, 0);
+  const errSuffix = totalErrors > 0 ? ` — ${totalErrors} code errors` : '';
+  document.getElementById('sim-results-title').textContent = `Results: ${n.toLocaleString()} Game${n>1?'s':''} Simulated${errSuffix}`;
 
-  const sorted = [0,1,2,3].sort((a,b) => wins[b]-wins[a]);
+  // ── Per-player statistics ──────────────────────────────────────────
+  // Each round, a player's round ends in exactly one outcome: bust, hold,
+  // frozen, or (rarely) locked by someone else's Flip 7. So Bust/Hold/Frozen
+  // are all measured as a share of ROUNDS PLAYED and sum to ~100% (the small
+  // remainder is rounds ended early by another player's Flip 7).
+  // Led %  : rounds started as score leader / rounds played.
+  const sorted = [0,1,2,3].sort((a,b) => wins[b]-wins[a]);  // players ranked by wins
+  const pct1 = (a, b) => b > 0 ? (a / b * 100).toFixed(1) + '%' : '—';
+  const statsRows = sorted.map(i => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);${i===sorted[0]?'color:var(--neon-green);':''}">
+      <td style="padding:0.35rem 0.6rem;">${i===sorted[0]?'🏆 ':''}${displayNames[i]}</td>
+      <td style="padding:0.35rem 0.6rem;text-align:right;">${pct1(bustCount[i],   roundsPlayed[i])}</td>
+      <td style="padding:0.35rem 0.6rem;text-align:right;">${pct1(holdCount[i],   roundsPlayed[i])}</td>
+      <td style="padding:0.35rem 0.6rem;text-align:right;">${pct1(frozenCount[i], roundsPlayed[i])}</td>
+      <td style="padding:0.35rem 0.6rem;text-align:right;">${pct1(ledCount[i],    roundsPlayed[i])}</td>
+    </tr>`).join('');
+
+  const statsHTML = `
+    <div style="margin-top:1rem;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;">Player Statistics</div>
+      <table style="width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:0.78rem;">
+        <thead>
+          <tr style="color:var(--gold);border-bottom:1px solid rgba(201,168,76,0.3);">
+            <th style="padding:0.35rem 0.6rem;text-align:left;">Player</th>
+            <th style="padding:0.35rem 0.6rem;text-align:right;" title="Share of rounds this player busted">Bust %</th>
+            <th style="padding:0.35rem 0.6rem;text-align:right;" title="Share of rounds this player chose to hold">Hold %</th>
+            <th style="padding:0.35rem 0.6rem;text-align:right;" title="Share of rounds this player was frozen out">Frozen %</th>
+            <th style="padding:0.35rem 0.6rem;text-align:right;" title="Share of rounds this player started as the score leader">Led %</th>
+          </tr>
+        </thead>
+        <tbody>${statsRows}</tbody>
+      </table>
+      <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--text-muted);margin-top:0.4rem;line-height:1.5;">
+        Bust % + Hold % + Frozen % ≈ 100% per player (remainder = rounds ended by another player's Flip 7) · Led % counts being tied for the lead at a round's start
+      </div>
+    </div>`;
+
   document.getElementById('sim-results-body').innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:0.85rem;">
       <thead>
@@ -1653,7 +2007,13 @@ function startSimulator(n) {
           <td style="padding:0.4rem 0.6rem;text-align:right;">${(totals[i]/n).toFixed(1)}</td>
         </tr>`).join('')}
       </tbody>
-    </table>`;
+    </table>
+    ${statsHTML}
+    ${totalErrors > 0 ? `<div style="margin-top:0.8rem;padding:0.6rem 0.8rem;background:rgba(232,85,85,0.08);border:1px solid rgba(232,85,85,0.25);border-radius:6px;font-family:'DM Mono',monospace;font-size:0.75rem;color:#ff8888;">
+      <div style="color:#ff8888;margin-bottom:4px;">⚠ Code errors during simulation:</div>
+      ${displayNames.map((nm,i) => errorCounts[i] > 0 ? `<div>${nm}: ${errorCounts[i].toLocaleString()} errors</div>` : '').join('')}
+    </div>` : ''}
+    `;
   document.getElementById('sim-results-modal').classList.add('show');
 }
 
@@ -1664,14 +2024,25 @@ let state = {
   deck: [],
   playedCards: {},  // tracks every card dealt since last shuffle (passed as `cards` param)
   round: 0,
-  hands: [],        // array of hand objects, index 0 = human
-  playerNames: [],  // ['Player1', 'Bekah', 'Katie', 'Mary']
-  scores: [0,0,0,0],
+  hands: [],        // array of hand objects, index 0 = human (always Player1)
+  playerNames: [],  // ['Player1', 'Bekah', 'Katie', 'Mary'] — fixed identity order
+  scores: [0,0,0,0],// indexed by player identity (0=Player1, 1=Bekah, 2=Katie, 3=Mary)
   wins:   [0,0,0,0],
   currentTurnIdx: 0,
-  firstPlayerIdx: 0,  // rotates clockwise each round: 0→1→2→3→0→...
+  firstSeat: 0,       // which SEAT goes first this round (rotates each round)
+  seatOrder: [0,1,2,3],// seat → player-identity index; reshuffled each new game
   phase: 'setup',   // 'setup' | 'human_turn' | 'ai_turn' | 'round_end'
 };
+
+// Random permutation of [0,1,2,3] — the seating / turn order for one game.
+function makeSeatOrder() {
+  const a = [0, 1, 2, 3];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // Build a fresh empty played-cards tracker (same shape as hand, no owner/is_busted)
 function emptyPlayedCards() {
@@ -1714,6 +2085,7 @@ function publicHand(h) {
   SPECIALS.forEach(k   => p[k] = h[k]);
   MODIFIERS.forEach(k  => p[k] = h[k]);
   p.is_busted = h.is_busted;
+  p.is_frozen = h._frozen ? 1 : 0;   // 1 if this player is currently frozen out of the round
   p.owner     = h.owner;
   return p;
 }
@@ -1859,15 +2231,28 @@ function testCode(idx) {
   if (ta) { ta.style.background = 'rgba(160,160,160,0.18)'; ta.style.transition = 'background 0.15s'; }
   statusEl.textContent = 'testing…';
   statusEl.className = 'code-status';
+  clearTestConsole();
   try {
     const fn = compilePythonToJS(code);
     aiFunctions[idx] = fn;
     const studentName = [document.getElementById('ai-name-0').value||'Bekah',
                          document.getElementById('ai-name-1').value||'Katie',
-                         document.getElementById('ai-name-2').value||'Mary'][idx];
+                         document.getElementById('ai-name-2').value||'Mary',
+                         'Player1 (AI)'][idx] || ('Student '+(idx+1));
 
     // Use the test data panel (editable JSON) as inputs
     const td = getTestData();
+    if (td._errors && td._errors.length > 0) {
+      consoleSep();
+      consoleAppend('=== Test Data Parse Errors ===', 'header');
+      td._errors.forEach(e => consoleAppend('✗ Invalid JSON in ' + e, 'err'));
+      consoleAppend('Fix the JSON in the test data panels and try again.', 'warn');
+      statusEl.textContent = '✗ Invalid test data JSON';
+      statusEl.className = 'code-status err';
+      if (ta) setTimeout(() => { ta.style.background = ''; }, 400);
+      if (codeBox) setTimeout(() => { codeBox.style.background = ''; }, 500);
+      return;
+    }
     const sampleAllHands = Array.isArray(td.allHands) ? td.allHands : [td.hand];
     const sampleCards    = td.cards;
     const sampleScores   = td.scores;
@@ -1892,19 +2277,15 @@ function testCode(idx) {
       try {
         const frozenResult = fn._frozen_fn(sampleAllHands, sampleScores);
         if (!validNames.includes(frozenResult)) {
-          const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
           messages.push('⚠ received_frozen returned: ' + JSON.stringify(frozenResult) +
             '\n  Valid targets are: ' + validNames.join(', ') +
-            '\n  scores input = ' + JSON.stringify(sampleScores) +
-            '\n  all_hands[0].owner = ' + sampleAllHands[0].owner +
-            (jsOut ? '\n\nTranspiled JS:\n' + jsOut : ''));
+            '\n  scores = ' + JSON.stringify(sampleScores) +
+            '\n  all_hands owners = ' + sampleAllHands.map(h=>h&&h.owner).join(', '));
         } else { frozenOk = true; }
       } catch(fe) {
-        const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
         messages.push('✗ received_frozen error: ' + fe.message +
           '\n  scores = ' + JSON.stringify(sampleScores) +
-          '\n  all_hands owners = ' + sampleAllHands.map(h=>h.owner).join(', ') +
-          (jsOut ? '\n\nTranspiled JS (check variable names):\n' + jsOut : ''));
+          '\n  all_hands owners = ' + sampleAllHands.map(h=>h&&h.owner).join(', '));
       }
     }
 
@@ -1914,27 +2295,24 @@ function testCode(idx) {
       try {
         const flip3Result = fn._flip3_fn(sampleAllHands, sampleScores);
         if (!validNames.includes(flip3Result)) {
-          const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
-          messages.push('⚠ received_flip3 returned: ' + JSON.stringify(flip3Result) +
+          messages.push('⚠ received_flip3(all_hands, scores) returned: ' + JSON.stringify(flip3Result) +
             '\n  Valid targets are: ' + validNames.join(', ') +
             '\n  scores = ' + JSON.stringify(sampleScores) +
-            '\n  all_hands owners = ' + sampleAllHands.map(h=>h.owner).join(', ') +
-            (jsOut ? '\n\nTranspiled JS:\n' + jsOut : ''));
+            '\n  all_hands owners = ' + sampleAllHands.map(h=>h&&h.owner).join(', '));
         } else { flip3Ok = true; }
       } catch(fe) {
-        const jsOut = compilePythonToJS._debugRun ? compilePythonToJS._debugRun(code) : '';
         messages.push('✗ received_flip3 error: ' + fe.message +
           '\n  scores = ' + JSON.stringify(sampleScores) +
-          '\n  all_hands owners = ' + sampleAllHands.map(h=>h.owner).join(', ') +
-          (jsOut ? '\n\nTranspiled JS (check variable names):\n' + jsOut : ''));
+          '\n  all_hands owners = ' + sampleAllHands.map(h=>h&&h.owner).join(', '));
       }
     }
 
+    const debugWrap = document.getElementById('debug-wrap-' + idx);
     if (messages.length > 0 && debugEl) {
-      debugEl.style.display = 'block';
+      if(debugWrap) debugWrap.style.display='block';
       debugEl.textContent = messages.join('\n\n');
     } else if (debugEl) {
-      debugEl.style.display = 'none';
+      if(debugWrap) debugWrap.style.display='none';
     }
 
     let extra = '';
@@ -1947,31 +2325,59 @@ function testCode(idx) {
     if (codeBox) setTimeout(() => { codeBox.style.background = ''; }, 500);
     updateLineNumbers(idx);  // clear any error highlights
     // Log all function results to the test console
-    logTestResults(studentName, fn, td);
+    const srcCode = document.getElementById('code-' + idx).value || '';
+    logTestResults(studentName, fn, td, srcCode);
   } catch (e) {
     aiFunctions[idx] = null;
-    let debugInfo = '(debug unavailable)';
-    let jsErrorLine = null;
+
+    // Map JS error line → Python source line
+    const PREAMBLE_LINES = 3;
+    let transpiledJS = '';
+    let jsErrorLine  = null;
     try {
-      // Use the actual JS that failed, not a re-run
-      const raw = compilePythonToJS._lastJS || compilePythonToJS._debugRun(document.getElementById('code-' + idx).value.trim());
-      debugInfo = addLineNumbers(raw);
-      jsErrorLine = extractErrorLine(e.message);
-    } catch(e2) { debugInfo = 'debug also failed: ' + e2.message; }
-    const srcErrorLine = jsErrorLine ? Math.max(1, jsErrorLine - 3) : null;
-    updateLineNumbers(idx, srcErrorLine);
-    const debugEl = document.getElementById('debug-' + idx);
-    if (debugEl) {
-      debugEl.style.display = 'block';
-      const lineHint = srcErrorLine ? ' (near source line ' + srcErrorLine + ')' : '';
-      debugEl.textContent = '== Transpiled JS (with line numbers) ==' + '\n' + debugInfo + '\n\n== Error' + lineHint + ' ==\n' + e.message;
+      transpiledJS = compilePythonToJS._debugRun(document.getElementById('code-' + idx).value.trim());
+      jsErrorLine  = extractErrorLine(e.message);
+    } catch(e2) { transpiledJS = '(transpile failed: ' + e2.message + ')'; }
+
+    const srcLine = jsErrorLine ? Math.max(1, jsErrorLine - PREAMBLE_LINES) : null;
+    updateLineNumbers(idx, srcLine);
+
+    const debugWrapErr = document.getElementById('debug-wrap-' + idx);
+    const debugElErr   = document.getElementById('debug-' + idx);
+    if (debugWrapErr) debugWrapErr.style.display = 'block';
+    if (debugElErr) {
+      const numbered  = addLineNumbers(transpiledJS);
+      const lineHint  = srcLine ? '(near Python source line ' + srcLine + ')' : '(line unknown)';
+      debugElErr.textContent = '== Transpiled JS ==\n' + numbered + '\n\n== Syntax Error ' + lineHint + ' ==\n' + e.message;
     }
+
     if (ta) { setTimeout(() => { ta.style.background = ''; }, 400); }
-    statusEl.textContent = '\u2717 ' + e.message;
+    if (codeBox) setTimeout(() => { codeBox.style.background = ''; }, 500);
+    const srcLines2 = (document.getElementById('code-' + idx).value || '').split('\n');
+    const badLineText = srcLine ? (srcLines2[srcLine - 1] || '').trim() : '';
+    statusEl.textContent = '\u2717 Line ' + (srcLine || '?') + ': ' + e.message + (badLineText ? ' → ' + badLineText.substring(0, 40) : '');
     statusEl.className = 'code-status err';
-    const errName = [document.getElementById('ai-name-0').value||'Bekah',document.getElementById('ai-name-1').value||'Katie',document.getElementById('ai-name-2').value||'Mary'][idx];
-    consoleAppend('=== ' + errName + ' \u2014 compile error ===', 'header');
-    consoleAppend('\u2717 ' + e.message + (srcErrorLine ? ' (near line ' + srcErrorLine + ')' : ''), 'err');
+
+    // Log to test console — always, every time, unconditionally
+    try {
+      const errNames4 = [document.getElementById('ai-name-0').value||'Bekah',
+                        document.getElementById('ai-name-1').value||'Katie',
+                        document.getElementById('ai-name-2').value||'Mary',
+                        'Player1 (AI)'];
+      const errName = errNames4[idx] || ('Student '+(idx+1));
+      const ts2 = new Date().toLocaleTimeString();
+      consoleSep();
+      consoleAppend('=== ' + errName + ' — compile error (' + ts2 + ') ===', 'header');
+      if (srcLine) {
+        const srcLines = (document.getElementById('code-' + idx).value || '').split('\n');
+        const badLine  = (srcLines[srcLine - 1] || '').trim();
+        consoleAppend('Line ' + srcLine + ': ' + badLine, 'warn');
+        consoleAppend('\u2717 ' + e.message, 'err');
+      } else {
+        consoleAppend('\u2717 ' + e.message, 'err');
+        consoleAppend('Tip: check the red debug panel below the code for the transpiled JS', 'dim');
+      }
+    } catch(logErr) { console.error('Console log failed:', logErr); }
     console.error('Student ' + (idx+1) + ' error:', e.message);  }
 }
 
@@ -1997,8 +2403,9 @@ function compilePythonToJS(rawCode) {
   // STEP 2: Strip triple-quoted docstrings (before anything touches quotes)
   src = src.replace(/'''[\s\S]*?'''/g, '').replace(/"""[\s\S]*?"""/g, '');
 
-  // STEP 3: Strip # comments
+  // STEP 3: Strip # comments and import statements (Python-only, not valid in JS)
   src = src.replace(/#[^\n]*/g, '');
+  src = src.replace(/^[ \t]*import\s+[^\n]*/gm, '');  // strip import lines
 
   // STEP 4: Extract the body of flip_card
   const allLines = src.split('\n');
@@ -2065,24 +2472,18 @@ function compilePythonToJS(rawCode) {
 
   // for x in range(n):
   js = js.replace(
-    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,
+    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)[ \t]*:/g,
     'for (let $1 = 0; $1 < $2; $1++):'
   );
   // for x in range(a, b):
   js = js.replace(
-    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*\)\s*:/g,
+    /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*\)[ \t]*:/g,
     'for (let $1 = $2; $1 < $3; $1++):'
   );
   // for x in range(a, b, step):
   js = js.replace(
     /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*,\s*(-?\w+|-?\d+)\s*\)\s*:/g,
     'for (let $1 = $2; $1 < $3; $1 += $4):'
-  );
-
-  // for x in list (plain iteration, not range or dict)
-  js = js.replace(
-    /\bfor\s+(\w+)\s+in\s+(\w+)\s*:/g,
-    'for (const $1 of $2):'
   );
 
   // STEP 7: Dict/list methods
@@ -2101,13 +2502,20 @@ function compilePythonToJS(rawCode) {
     /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\s*:/g,
     'for (const [$1, $2] of Object.entries($3)):'
   );
-  // Handle already-.entries()-ified forms from earlier transforms
+  // Handle already-.entries()-ified forms from earlier transforms.
+  // A `for k, v in X.items():` becomes `X.entries()` after STEP 7 — but plain
+  // objects have no .entries() method, so this must be Object.entries(X).
   js = js.replace(
-    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,
-    'for (const [$1, $2] of $3.entries()):'
+    /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\.entries\(\)\s*:/g,
+    'for (const [$1, $2] of Object.entries($3)):'
   );
 
   // STEP 8: Built-in functions
+  // dict.get(key, default) → (dict[key] !== undefined ? dict[key] : default)
+  js = js.replace(/([\w\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,
+    '($1[$2] !== undefined ? $1[$2] : $3)');
+  // dict.get(key) with no default → dict[key]
+  js = js.replace(/([\w\]"']+)\.get\(([^,)]+)\)/g, '$1[$2]');
   js = js.replace(/\blen\(([^)]+)\)/g,   '($1).length');
   js = js.replace(/\bint\(([^)]+)\)/g,   'parseInt($1)');
   js = js.replace(/\bfloat\(([^)]+)\)/g, 'parseFloat($1)');
@@ -2115,10 +2523,24 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\babs\(([^)]+)\)/g,   'Math.abs($1)');
   js = js.replace(/\bmax\(([^)]+)\)/g,   'Math.max($1)');
   js = js.replace(/\bmin\(([^)]+)\)/g,   'Math.min($1)');
-  js = js.replace(/\bprint\s*\([^)]*\)/g,'');
-  js = js.replace(/\.isdigit\(\)/g, '.match(/^\\d+$/)/');
+  // Convert Python print() to consoleAppend so output shows in test console
+  // Convert Python print() to consoleAppend
+  js = js.replace(/\bprint\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+    function(_, args) { return "consoleAppend('flip_card: ' + String(" + args + "), 'dim')"; });
+
+  // .isdigit() → regex test (no trailing slash!)
+  js = js.replace(/\.isdigit\(\)/g, '.match(/^\\d+$/)');
   // Integer division: a // b → Math.floor(a / b)
-  js = js.replace(/(\w+[\w\]"'\)\s]*)\s*\/\/\s*(\w+[\w\[\]"'\s]*)/g, 'Math.floor($1 / $2)');
+  // Operands are kept tight (single identifier / number / index / call) so the
+  // regex can't greedily swallow surrounding expression text.
+  js = js.replace(
+    /([\w.]+(?:\[[^\]]+\])?(?:\([^()]*\))?)\s*\/\/\s*([\w.]+(?:\[[^\]]+\])?(?:\([^()]*\))?)/g,
+    'Math.floor($1 / $2)');
+
+  // STEP 8b: Python ternary expression
+  // Python ternary: 'val if cond else other' → 'cond ? val : other'
+  js = js.replace(/\b(return|=)\s+(.+?)\s+if\s+(.+?)\s+else\s+(.+?)$/gm,
+    (_, kw, val, cond, other) => `${kw} (${cond}) ? (${val}) : (${other})`);
 
   // STEP 9: Python keywords → JS
   js = js.replace(/\bTrue\b/g,  'true');
@@ -2126,32 +2548,28 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\bNone\b/g,  'null');
   js = js.replace(/\band\b/g,   '&&');
   js = js.replace(/\bor\b/g,    '||');
+  // 'x not in y' → '!y.includes(x)'  — MUST run before the bare 'not' rule below
+  js = js.replace(/\b(\w+)\s+not\s+in\s+(\w+)(?!\s*:)/g, (m,a,b) => '!'+b+'.includes('+a+')');
   js = js.replace(/\bnot\s+([(\w])/g, '!$1');
   js = js.replace(/\belif\s+/g, 'else if ');
   // 'x in list' → 'list.includes(x)' (only in conditions, not for loops)
-  // Use \b after second group to prevent partial word matches (e.g. 'all_hand' from 'all_hands')
-  js = js.replace(/(?<!for\s{1,10})\b(\w+)\s+in\s+(\w+)\b(?!\s*\(|\s*:)/g, (m,a,b) => b+'.includes('+a+')');
+  js = js.replace(/\b(\w+)\s+in\s+(\w+)(?!\s*:)/g, (m,a,b) => b+'.includes('+a+')');
 
   // STEP 10: Indentation → braces
   js = convertIndentToBlocks(js);
 
-  // STEP 11: Compile — pre-declare all variable names students commonly use
-  const preamble = `var answer=false,pick=false,score=0,points=0,total=0,
-    number=0,count=0,result='',my_hand=hand,temp=0,num_cards=0,most_cards=0,most_name='',name='',
-    threshold=25,my_score=0,new_var=0,
-    highest_round_points=0,highest_round_name='',highest_round_score=0,
-    highest_score=0,highest_name='',
-    high_score=0,high_name='',high_score2=0,high_name2='',
-    winner_name='',winner_score=0,
-    mary_cards=0,katie_cards=0,player1_cards=0,
-    most_cards=0,most_name='',num_cards=0,
-    names='',total_score=0,hands=null;
-  var random={choice:function(a){return a[Math.floor(Math.random()*a.length)];},
-    randint:function(a,b){return Math.floor(Math.random()*(b-a+1))+a;},
-    shuffle:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}};`;  // Store transpiled JS for error debugging
-  compilePythonToJS._lastJS = js;
-  compilePythonToJS._lastPreamble = preamble;
-  const fn = new Function('hand','all_hands','cards','scores', preamble + '\n' + js);
+  // STEP 11: Compile.
+  // Auto-declare EVERY variable the student assigns to. Python has no
+  // declarations, but the transpiled JS runs under "use strict", so any
+  // bare assignment to an undeclared name throws "X is not defined".
+  // collectAssignedVars() scans for left-hand-side names and we hoist a
+  // single `var` for all of them — so students can use any variable name.
+  const reserved = ['hand','all_hands','cards','scores'];  // function params
+  const autoVars = collectAssignedVars(js, reserved);
+  const autoDecl = autoVars.length ? 'var ' + autoVars.join(', ') + ';\n' : '';
+  const preamble = autoDecl +
+    `var random={choice:function(a){return a[Math.floor(Math.random()*a.length)];},randint:function(a,b){return Math.floor(Math.random()*(b-a+1))+a;},shuffle:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}};`;
+  const fn = new Function('hand','all_hands','cards','scores', `"use strict";\n${preamble}\n${js}`);
   // Smoke test
   fn(publicHand(emptyHand('smoke')), [publicHand(emptyHand('smoke'))], [], {});
 
@@ -2160,6 +2578,43 @@ function compilePythonToJS(rawCode) {
   fn._flip3_fn  = extractPythonFn(rawCode, 'received_flip3',  ['all_hands', 'scores']);
 
   return fn;
+}
+
+// Scan transpiled JS for every variable name that appears on the
+// left-hand side of a plain assignment, so they can all be declared.
+// Skips compound/comparison operators, for-loop bindings, object keys,
+// reserved names, and JS keywords.
+function collectAssignedVars(js, reserved) {
+  const found = new Set();
+  const skip = new Set([
+    'if','else','for','while','return','true','false','null','var','let',
+    'const','function','new','typeof','in','of','break','continue','this',
+    'Math','String','Object','Array','parseInt','parseFloat','random'
+  ].concat(reserved || []));
+
+  // Strip string literals so quoted '=' signs don't confuse the scan.
+  const noStrings = js
+    .replace(/'(?:[^'\\]|\\.)*'/g, "''")
+    .replace(/"(?:[^"\\]|\\.)*"/g, '""');
+
+  const lines = noStrings.split('\n');
+  for (let line of lines) {
+    // Ignore the inside of for(...) headers — those bindings are already declared.
+    const forIdx = line.indexOf('for ');
+    const scan = (forIdx >= 0) ? line.slice(0, forIdx) : line;
+    // Match a bare identifier assignment at the start of a statement:
+    //   name = ...   (not ==, <=, >=, !=, +=, -=, *=, /=)
+    // Allows leading whitespace and an opening brace from block conversion.
+    const m = scan.match(/(?:^|[;{])\s*([A-Za-z_$][\w$]*)\s*=(?![=])/);
+    if (m) {
+      const name = m[1];
+      if (!skip.has(name)) found.add(name);
+    }
+    // Also catch compound assignments like  total += x  — `total` must exist.
+    const cm = scan.match(/(?:^|[;{])\s*([A-Za-z_$][\w$]*)\s*[+\-*/%]=/);
+    if (cm && !skip.has(cm[1])) found.add(cm[1]);
+  }
+  return Array.from(found);
 }
 
 // This is the JS code to inject
@@ -2185,7 +2640,7 @@ compilePythonToJS._debugRun = function(rawCode) {
   js=js.replace(/([\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)');
   js=js.replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()');
   js=js.replace(/\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(.+?)\.entries\(\)\s*:/g,'for (const [$1,$2] of $3.entries()):');
-  js=js.replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)\s*:/g,'for (let $1=0;$1<$2;$1++):');
+  js=js.replace(/\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*\)[ \t]*:/g,'for (let $1=0;$1<$2;$1++):');
   js=js.replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
   js=js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\s+([(\w])/g,'!$1');
   js=js.replace(/\belif\s+/g,'else if ').replace(/\blen\(([^)]+)\)/g,'($1).length');
@@ -2212,12 +2667,18 @@ function extractPythonFn(rawCode, fnName, paramNames) {
       if (line.startsWith(baseIndent) || line.startsWith('\t')) bodyLines.push(line);
       else if (line.trim()) break;
     }
-    if (bodyLines.length === 0) return null;
+    if (bodyLines.length === 0) {
+      // Function exists but has no body
+      const emptyFn = function() { return undefined; };
+      emptyFn._compileError = 'Function body is empty — add code inside the function';
+      return emptyFn;
+    }
 
     let js = bodyLines.join('\n');
 
     // Strip comments
     js = js.replace(/#[^\n]*/g, '');
+    js = js.replace(/^[ \t]*import\s+[^\n]*/gm, '');  // strip import lines
 
     // Fix backslash continuations
     js = js.replace(/\\\n\s*/g, ' ');
@@ -2226,8 +2687,13 @@ function extractPythonFn(rawCode, fnName, paramNames) {
     js = js.replace(/\b(if|elif)\s+(\w+)\s*=\s*(?!=)/g, '$1 $2 ==');
 
     // Fix True/False/None/operators first
+    // Python ternary: val if cond else other → (cond) ? (val) : (other)
+    js = js.replace(/\b(return|=)\s+(.+?)\s+if\s+(.+?)\s+else\s+(.+?)$/gm,
+      (_, kw, val, cond, other) => `${kw} (${cond}) ? (${val}) : (${other})`);
     js = js.replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
-    js = js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\s+([\(\w])/g,'!$1');
+    js = js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||');
+    js = js.replace(/\b(\w+)\s+not\s+in\s+(\w+)(?!\s*:)/g, function(m,a,b){ return '!'+b+'.includes('+a+')'; });
+    js = js.replace(/\bnot\s+([\(\w])/g,'!$1');
     js = js.replace(/\belif\s+/g,'else if ');
 
     // Fix "for k, v in dict:" → for..of destructuring in ONE step
@@ -2253,31 +2719,59 @@ function extractPythonFn(rawCode, fnName, paramNames) {
     // Built-ins
     js = js.replace(/([ \t]*[\w\[\]"']+)\.get\(([^,)]+),\s*([^)]+)\)/g,'($1[$2] !== undefined ? $1[$2] : $3)');
     js = js.replace(/\.items\(\)/g,'.entries()').replace(/\.keys\(\)/g,'.keys()').replace(/\.values\(\)/g,'.values()');
+    // Safety net: any leftover `for k, v in X.entries():` on a plain object
+    // must use Object.entries(X), since objects have no .entries() method.
+    js = js.replace(
+      /\bfor\s+(\w+)\s*,\s*(\w+)\s+in\s+(\w+)\.entries\(\)\s*:/g,
+      'for (const [$1, $2] of Object.entries($3)):'
+    );
     js = js.replace(/\blen\(([^)]+)\)/g,'($1).length');
     js = js.replace(/\bint\(([^)]+)\)/g,'parseInt($1)');
     js = js.replace(/\bfloat\(([^)]+)\)/g,'parseFloat($1)');
     js = js.replace(/\bstr\(([^)]+)\)/g,'String($1)');
     js = js.replace(/\babs\(([^)]+)\)/g,'Math.abs($1)');
-    js = js.replace(/\bprint\s*\([^)]*\)/g,'');
+    // Convert Python print() to consoleAppend so output shows in test console
+  // Convert Python print() to consoleAppend
+  js = js.replace(/\bprint\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+    function(_, args) { return "consoleAppend('flip_card: ' + String(" + args + "), 'dim')"; });
+
+
+    // Convert Python print() to consoleAppend with function prefix
+    js = js.replace(/\bprint\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+      function(_, args) { return "consoleAppend('" + fnName + ": ' + String(" + args + "), 'dim')"; });
 
     js = convertIndentToBlocks(js);
 
-    // Comprehensive preamble — all variable names students commonly use
-    const preamble = 'var result="",score=0,most_cards=0,most_name="",name="",' +
-      'num_cards=0,high_score=0,high_name="",high_score2=0,high_name2="",' +
-      'winner_name="",highest_score=0,highest_round_points=0,highest_round_name="",' +
-      'highest_round_score=0,highest_name="",' +
-      'threshold=25,my_score=0,new_var=0,' +
-      'mary_cards=0,katie_cards=0,player1_cards=0,' +
-      'most_cards=0,most_name="",num_cards=0,' +
-      'points=0,answer=false,pick=false,total=0,count=0,temp=0,' +
-      'names="",total_score=0,hands=null,' +
-      'random={choice:function(a){return a[Math.floor(Math.random()*a.length)];},randint:function(a,b){return Math.floor(Math.random()*(b-a+1))+a;}};'
+    // Auto-declare every variable the student assigns to (see collectAssignedVars).
+    // This replaces the old fixed list so any variable name works under "use strict".
+    const autoVars = collectAssignedVars(js, paramNames);
+    const autoDecl = autoVars.length ? 'var ' + autoVars.join(', ') + ';' : '';
+    const preamble = autoDecl +
+      'var random={choice:function(a){return a[Math.floor(Math.random()*a.length)];},randint:function(a,b){return Math.floor(Math.random()*(b-a+1))+a;},shuffle:function(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}};';
     // Build param aliases so variables are always accessible even with use strict
     const paramAliases = paramNames.map(p => 'var ' + p + ' = ' + p + ';').join(' ');
     return new Function(paramNames.join(','), preamble + '\n' + paramAliases + '\n' + js);
   } catch(e) {
-    return null;
+    // Find the Python source line by running the transforms and checking JS line numbers
+    const errMsg = e.message;
+    let pyLine = null;
+    let pyLineText = '';
+    try {
+      // Run the same transforms to get the JS that caused the error
+      const transpiledForErr = convertIndentToBlocks(js);
+      const jsLineNum = extractErrorLine(errMsg);
+      if (jsLineNum) {
+        // Map JS line → Python source line (subtract preamble: 1 line for preamble + 1 for aliases)
+        const EXTRACT_PREAMBLE = 2;
+        pyLine = Math.max(1, jsLineNum - EXTRACT_PREAMBLE);
+        pyLineText = (bodyLines[pyLine - 1] || '').trim();
+      }
+    } catch(_) {}
+    const sentinel = function() { throw new Error('Compile error: ' + errMsg); };
+    sentinel._compileError = errMsg;
+    sentinel._errorLine = pyLine;
+    sentinel._errorLineText = pyLineText;
+    return sentinel;
   }
 }
 
@@ -2304,10 +2798,11 @@ function convertIndentToBlocks(code) {
 
     // Does this line open a block? Must end with ':' and be a control keyword
     const isControl = /^(if\b|else if\b|else:|for\b|while\b)/.test(trimmed) || trimmed === 'else:';
-    const endsColon = trimmed.endsWith(':');
+    const endsColon = trimmed.trimEnd().endsWith(':');
+    const trimmedClean = trimmed.trimEnd();
 
     if (isControl && endsColon) {
-      const noColon = trimmed.slice(0, -1).trim();
+      const noColon = trimmedClean.slice(0, -1).trim();
       let jsLine;
 
       if (noColon === 'else') {
@@ -2446,7 +2941,7 @@ function callReceivedFrozen(aiIdx) {
   }
 }
 
-// Call student's received_flip3(all_hands) → target name string
+// Call student's received_flip3(all_hands, scores) → target name string
 function callReceivedFlip3(aiIdx) {
   const fn = aiFunctions[aiIdx];
   if (!fn || !fn._flip3_fn) return null;
@@ -2491,7 +2986,8 @@ function resolveFreeze(playerIdx, callback) {
     const validNames = eligible.map(e => e.name);
     if (!target || !validNames.includes(target)) {
       const fallback = eligible[Math.floor(Math.random() * eligible.length)].name;
-      addLog(`<span class="event-player">${displayName}</span> received_frozen() returned <b>${JSON.stringify(target)}</b> (invalid) — randomly froze ${fallback}`, 'warn');
+      const reason = target && ['Player1','Bekah','Katie','Mary'].includes(target) ? ' (that player is already done)' : ' (not a valid player name)';
+      addLog(`<span class="event-player">${displayName}</span> received_frozen() returned <b>${JSON.stringify(target)}</b>${reason} — randomly froze ${fallback}`, 'warn');
       target = fallback;
     } else {
       addLog(`<span class="event-player">${displayName}</span> received_frozen() returned <b>${target}</b>`, '');
@@ -2522,7 +3018,8 @@ function resolveFlip3Target(playerIdx, callback) {
     const validNames = eligible.map(e => e.name);
     if (!target || !validNames.includes(target)) {
       const fallback = eligible[Math.floor(Math.random() * eligible.length)].name;
-      addLog(`<span class="event-player">${displayName}</span> received_flip3() returned <b>${JSON.stringify(target)}</b> (invalid) — randomly targeting ${fallback}`, 'warn');
+      const reason2 = target && ['Player1','Bekah','Katie','Mary'].includes(target) ? ' (that player is already done)' : ' (not a valid player name)';
+      addLog(`<span class="event-player">${displayName}</span> received_flip3() returned <b>${JSON.stringify(target)}</b>${reason2} — randomly targeting ${fallback}`, 'warn');
       target = fallback;
     } else {
       addLog(`<span class="event-player">${displayName}</span> received_flip3() chose to target <b>${target}</b>`, '');
@@ -2575,6 +3072,30 @@ function player1AIDecision(hand, deck, played) {
 //   without receiving one.  Human players get Flip / Hold buttons.
 // ============================================================
 
+// ============================================================
+// SEATING LAYOUT
+// Position the three AI panels so the visual seating matches the
+// randomized play order. The human (index 0) is always bottom-center.
+// Walking the play order from the human: +1 player → LEFT mat,
+// +2 → TOP mat, +3 → RIGHT mat (clockwise around the table).
+// AI identity index 1=Bekah, 2=Katie, 3=Mary → wrapper panel-wrap-{idx}.
+// ============================================================
+function applySeatingLayout() {
+  const order = (Array.isArray(state.seatOrder) && state.seatOrder.length === 4)
+    ? state.seatOrder : [0,1,2,3];
+  const humanSeat = order.indexOf(0);          // where the human sits in play order
+  if (humanSeat < 0) return;
+  // Seat classes for the +1 / +2 / +3 players, clockwise from the human.
+  const seatClass = ['seat-left', 'seat-top', 'seat-right'];
+  for (let step = 1; step <= 3; step++) {
+    const playerIdx = order[(humanSeat + step) % 4];  // identity index (1..3)
+    const wrap = document.getElementById('panel-wrap-' + playerIdx);
+    if (!wrap) continue;
+    wrap.classList.remove('seat-left', 'seat-top', 'seat-right');
+    wrap.classList.add(seatClass[step - 1]);
+  }
+}
+
 function getNames() {
   // Index 0 is the human player. owner in the hand dict is 'Player1'.
   return [
@@ -2600,13 +3121,27 @@ function startRound() {
   }
   state.hands          = names.map(n => emptyHand(n));
   state.phase          = 'setup';
-  // Clockwise rotation: Player1 → Bekah → Katie → Mary → Player1 → ...
-  state.currentTurnIdx = state.firstPlayerIdx || 0;
-  // Advance for next round
-  state.firstPlayerIdx = ((state.firstPlayerIdx || 0) + 1) % 4;
+
+  // ── Seating order ──────────────────────────────────────────────
+  // At the start of a new game (round 1) the four players are seated
+  // in a fresh random order, so Player1 does not always start first.
+  // Identity arrays (hands, scores, names) stay fixed — only the turn
+  // order changes. seatOrder[seat] = player-identity index.
+  if (state.round === 1 || !Array.isArray(state.seatOrder) || state.seatOrder.length !== 4) {
+    state.seatOrder = makeSeatOrder();
+    const orderNames = state.seatOrder.map(pi => pi === 0 ? 'Player1' : names[pi]);
+    addLog('— Seating order this game: ' + orderNames.join(' → ') + ' —', 'highlight');
+  }
+  // Position the AI panels so the on-screen seating matches the play order.
+  applySeatingLayout();
+  // First seat rotates each round; turn order follows seatOrder.
+  state.firstSeat      = (state.round - 1) % 4;
+  state.currentTurnIdx = state.seatOrder[state.firstSeat];
 
   document.getElementById('round-num').textContent        = state.round;
   document.getElementById('log-entries').innerHTML        = '';
+  const drs = document.getElementById('deck-round-summary');
+  if (drs) drs.style.display = 'none';
   document.getElementById('action-area').style.display   = 'none';
   document.getElementById('flip-hold-area').style.display = 'none';
 
@@ -2623,6 +3158,16 @@ function startRound() {
   setTimeout(() => nextPlayerTick(), 80);
 }
 
+// Given a player-identity index, return the identity index of the player
+// sitting in the NEXT seat (wrapping around), using the game's seatOrder.
+function nextSeatPlayerIdx(playerIdx) {
+  const order = (Array.isArray(state.seatOrder) && state.seatOrder.length === 4)
+    ? state.seatOrder : [0,1,2,3];
+  const seat = order.indexOf(playerIdx);
+  const nextSeat = (seat < 0 ? 0 : (seat + 1) % 4);
+  return order[nextSeat];
+}
+
 // ── Core tick: offer the current player their turn, then advance ──
 function nextPlayerTick() {
   // Only end the round when EVERY player is done (busted, held, or frozen)
@@ -2631,12 +3176,11 @@ function nextPlayerTick() {
     return;
   }
 
-  // Find the next player who is NOT done, starting from currentTurnIdx,
+  // Find the next player who is NOT done, walking the seating order,
   // wrapping around. If we make a full lap and only find done players, end round.
-  const startIdx = state.currentTurnIdx;
   let checked = 0;
   while (isDone(state.hands[state.currentTurnIdx])) {
-    state.currentTurnIdx = (state.currentTurnIdx + 1) % 4;
+    state.currentTurnIdx = nextSeatPlayerIdx(state.currentTurnIdx);
     checked++;
     if (checked >= 4) {
       // Full lap — everyone is done
@@ -2669,9 +3213,9 @@ function nextPlayerTick() {
   }
 }
 
-// After a player's action is resolved, advance to the next player
+// After a player's action is resolved, advance to the next player (by seat order)
 function advanceToNextPlayer() {
-  state.currentTurnIdx = (state.currentTurnIdx + 1) % 4;
+  state.currentTurnIdx = nextSeatPlayerIdx(state.currentTurnIdx);
   setTimeout(() => nextPlayerTick(), 80);
 }
 
@@ -3010,14 +3554,39 @@ function buildResultScoresHTML(winnerIdx, pts) {
 }
 
 
+function updateDeckSummary(winnerIdx, pts) {
+  const summaryDiv = document.getElementById('deck-round-summary');
+  if (!summaryDiv) return;
+  const wd = winnerIdx === 0 ? 'You' : state.playerNames[winnerIdx];
+  document.getElementById('deck-summary-winner').textContent = '🏆 ' + wd + ' wins!';
+  const scoresEl = document.getElementById('deck-summary-scores');
+  scoresEl.innerHTML = state.playerNames.map((nm, i) => {
+    const dn = i === 0 ? 'You' : nm;
+    const isWinner = i === winnerIdx;
+    const roundPts = pts[i];
+    const total = state.scores[i];
+    const color = isWinner ? 'var(--gold)' : 'var(--text-light)';
+    return `<div style="display:flex;justify-content:space-between;align-items:baseline;
+      padding:0.25rem 0;border-bottom:1px solid rgba(255,255,255,0.05);
+      font-family:'DM Mono',monospace;font-size:0.75rem;color:${color};">
+      <span>${isWinner ? '★ ' : ''}${dn}</span>
+      <span style="display:flex;gap:0.7rem;">
+        <span style="color:var(--neon-green);font-size:0.7rem;">+${roundPts}</span>
+        <span style="font-weight:600;">${total}</span>
+      </span>
+    </div>`;
+  }).join('');
+  summaryDiv.style.display = 'block';
+}
+
 function showRoundResult(winnerIdx, pts) {
   const wd = winnerIdx === 0 ? 'You' : state.playerNames[winnerIdx];
   document.getElementById('result-title').textContent  = `Round ${state.round} Complete`;
   document.getElementById('result-winner').textContent = `${wd} wins the round!`;
   document.getElementById('result-scores').innerHTML   = buildResultScoresHTML(winnerIdx, pts);
-  const nb = document.getElementById('result-next-btn');
-  if (nb) { nb.textContent = 'Next Round'; nb.onclick = closeResult; }
-  document.getElementById('round-result').classList.add('show');
+  const rrEl = document.getElementById('round-result');
+  rrEl.classList.add('show');
+  updateDeckSummary(winnerIdx, pts);
 }
 
 function showGameOver(gameWinnerIdx, roundPts) {
@@ -3025,11 +3594,11 @@ function showGameOver(gameWinnerIdx, roundPts) {
   document.getElementById('result-title').textContent  = 'Game Over!';
   document.getElementById('result-winner').textContent = `${wd} wins with ${state.scores[gameWinnerIdx]} pts!`;
   document.getElementById('result-scores').innerHTML   = buildResultScoresHTML(gameWinnerIdx, roundPts);
-  const nb = document.getElementById('result-next-btn');
-  if (nb) { nb.textContent = 'Play Again'; nb.onclick = newGame; }
-  document.getElementById('round-result').classList.add('show');
+  const rrEl2 = document.getElementById('round-result');
+  rrEl2.classList.add('show');
   document.getElementById('btn-deal').disabled = true;
   addLog(`${wd} wins the game! ${state.scores[gameWinnerIdx]} pts`, 'win');
+  updateDeckSummary(gameWinnerIdx, roundPts);
 }
 
 
@@ -3042,7 +3611,8 @@ function newGame() {
   state.scores      = [0,0,0,0];
   state.wins        = [0,0,0,0];
   state.round       = 0;
-  state.firstPlayerIdx = 0;
+  state.firstSeat   = 0;
+  state.seatOrder   = makeSeatOrder();  // fresh random seating for the new game
   state.phase       = 'setup';
   state.hands       = [];
   state.deck        = [];          // reset so next startRound builds a fresh deck
@@ -3079,6 +3649,54 @@ function renderAll() {
   renderHumanHand();
   renderAIPlayers();
   document.getElementById('human-score').textContent  = state.scores[0];
+  syncTestDataPanel();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// LIVE TEST-DATA SYNC
+// Mirrors the real game state into the test-data panel every turn,
+// so the panel always shows exactly what the game is passing to the
+// player whose turn it currently is.
+//   hand      → the current player's hand
+//   allHands  → every player's hand (same structure)
+//   cards     → all cards drawn from the deck since the last shuffle
+//   scores    → every player's running game total
+// ─────────────────────────────────────────────────────────────────
+function syncTestDataPanel() {
+  // Only sync during an actual interactive game — not during setup,
+  // and not while the batch simulator is running (it never touches `state`).
+  if (!state.hands || state.hands.length !== 4) return;
+  if (state.phase === 'setup') return;
+
+  const fmt   = obj => JSON.stringify(obj, null, 2);
+  const names = state.playerNames && state.playerNames.length === 4
+    ? state.playerNames : getNames();
+
+  // The "current player" is whoever's turn it is right now.
+  const curIdx   = (typeof state.currentTurnIdx === 'number') ? state.currentTurnIdx : 0;
+  const handObj  = publicHand(state.hands[curIdx]);
+  const allHands = state.hands.map(publicHand);
+  const cardsObj = Object.assign({}, state.playedCards);
+  const scores   = {};
+  names.forEach((nm, i) => { scores[nm] = state.scores[i]; });
+
+  const ta_h  = document.getElementById('test-hand');
+  const ta_ah = document.getElementById('test-all-hands');
+  const ta_sc = document.getElementById('test-scores');
+  const ta_cd = document.getElementById('test-cards');
+  if (ta_h)  ta_h.value  = fmt(handObj);
+  if (ta_ah) ta_ah.value = fmt(allHands);
+  if (ta_sc) ta_sc.value = fmt(scores);
+  if (ta_cd) ta_cd.value = fmt(cardsObj);
+
+  // Label which player the `hand` panel is currently showing.
+  const lbl = document.getElementById('test-hand-owner');
+  if (lbl) {
+    const dn = curIdx === 0
+      ? (playerMode === 'ai' ? 'Player1 (AI)' : 'You (Player1)')
+      : names[curIdx];
+    lbl.textContent = '● live: ' + dn + "'s turn";
+  }
 }
 
 function cardHTML(card, extraClass = '', isNew = false) {
@@ -3267,7 +3885,13 @@ function shakeEl(id) {
 }
 
 function switchTab(idx) {
-  document.querySelectorAll('.code-tab').forEach((t, i) => t.className = 'code-tab' + (i === idx ? ' active' : ''));
+  document.querySelectorAll('.code-tab').forEach((t, i) => {
+    const base = i === 3 ? 'code-tab' : 'code-tab';
+    const extra = i === idx ? ' active' : '';
+    const color = i === 3 ? 'color:var(--frozen);' : '';
+    t.className = base + extra;
+    if (i === 3) t.style.color = i === idx ? '' : 'var(--frozen)';
+  });
   document.querySelectorAll('.code-box').forEach((b, i) => b.className = 'code-box' + (i === idx ? ' active' : ''));
 }
 
@@ -3314,7 +3938,7 @@ function clearTestConsole() {
 
 window.consoleAppend = function consoleAppend(text, cls='') {
   const el = document.getElementById('test-console');
-  if (!el) return;
+  if (!el) { console.log('[console]', text); return; }
   // Remove the placeholder if present
   const ph = el.querySelector('.dim');
   if (ph && ph.textContent.includes('Run')) ph.remove();
@@ -3323,17 +3947,10 @@ window.consoleAppend = function consoleAppend(text, cls='') {
   p.textContent = text;
   el.appendChild(p);
   el.scrollTop = el.scrollHeight;
-}
-// alias so compiled student functions can call it
-if (typeof window !== "undefined") window.consoleAppend = consoleAppend;
-
-function getErrorTip(errMsg, srcLine) {
-  if (errMsg.includes('missing ) after argument list')) return 'A function call is missing its closing parenthesis, or a variable is not defined (check print() uses parens, not Python 2 "print x" style)';
-  if (errMsg.includes('Unexpected identifier')) return 'An unexpected word appeared — check for missing operators, commas, or parentheses on this line';
-  if (errMsg.includes('Unexpected token')) return 'Unexpected symbol — check colons, brackets, or operators near this line';
-  if (errMsg.includes('is not defined')) { const v = (errMsg.match(/(\w+) is not defined/) || [])[1]; return v ? '"'+v+'" is used but never assigned — add "'+v+' = 0" at the top of your function' : 'A variable is used before being defined'; }
-  if (errMsg.includes('already been declared')) return 'A variable name is used in both an outer and inner for loop — rename one (e.g. use "i" instead of "x" in the inner loop)';
-  return 'Check the syntax near this line';
+  // Flash the console border briefly so user notices new content
+  el.style.borderColor = 'rgba(57,255,110,0.5)';
+  clearTimeout(el._flashTimer);
+  el._flashTimer = setTimeout(() => { el.style.borderColor = ''; }, 600);
 }
 
 function consoleSep() {
@@ -3345,55 +3962,95 @@ function consoleSep() {
   el.scrollTop = el.scrollHeight;
 }
 
+// Report a compile error with source line info
+function reportCompileErrorLine(errMsg, srcCode, sentinel) {
+  // Prefer the pre-computed line from the sentinel
+  const srcLine = (sentinel && sentinel._errorLine) || null;
+  const badLine = (sentinel && sentinel._errorLineText) || '';
+  if (srcLine) {
+    consoleAppend('  Line ' + srcLine + ': ' + badLine, 'warn');
+    consoleAppend('  Tip: fix the syntax on that line — missing colon, unexpected character, or unknown variable.', 'dim');
+  } else if (srcCode) {
+    // Fallback: parse from error message
+    const jsLine = extractErrorLine(errMsg);
+    const fl = jsLine ? Math.max(1, jsLine - 3) : null;
+    if (fl) {
+      const lines = srcCode.split('\n');
+      const bt = (lines[fl - 1] || '').trim();
+      consoleAppend('  Line ' + fl + ' (approx): ' + bt, 'warn');
+    } else {
+      consoleAppend('  Tip: look at the transpiled JS debug panel below the code box for details.', 'dim');
+    }
+  }
+}
+
+// Helper: run a compiled function and report result + any runtime error with line info
+function runAndReport(label, fn, args, validTargets, srcCode) {
+  consoleAppend(label + ':', 'label');
+  try {
+    const r = fn(...args);
+    if (validTargets === null) {
+      // flip_card — expects bool
+      const isBool = r === true || r === false || r === 1 || r === 0;
+      consoleAppend('  → returned: ' + JSON.stringify(r), isBool ? (r ? 'ok' : 'warn') : 'err');
+      consoleAppend('  ' + (r === true || r === 1 ? '✓ FLIP — will draw a card' : r === false || r === 0 ? '✓ HOLD — will not draw' : '✗ Unexpected return value (expected True or False)'), isBool ? (r ? 'ok' : 'warn') : 'err');
+    } else {
+      // freeze / flip3 — expects player name string
+      const valid = validTargets.includes(r);
+      consoleAppend('  → returned: ' + JSON.stringify(r), valid ? 'result' : 'err');
+      consoleAppend('  ' + (valid ? '✓ Will target: ' + r : '✗ Invalid! Must be one of: ' + validTargets.join(', ')), valid ? 'ok' : 'err');
+    }
+  } catch(e) {
+    // Runtime error — try to find which source line
+    const jsLine   = extractErrorLine(e.message);
+    const srcLine  = jsLine ? Math.max(1, jsLine - 3) : null;
+    const srcLines = (srcCode || '').split('\n');
+    const badLine  = srcLine ? (srcLines[srcLine - 1] || '').trim() : '';
+
+    consoleAppend('  ✗ Runtime error: ' + e.message, 'err');
+    if (srcLine) {
+      consoleAppend('  Line ' + srcLine + ': ' + badLine, 'warn');
+      consoleAppend('  Tip: check that all variables used on that line are defined above it.', 'dim');
+    }
+  }
+}
+
 // Log all three function results for a student into the test console
-function logTestResults(studentName, fn, td) {
+function logTestResults(studentName, fn, td, srcCode) {
   const ts = new Date().toLocaleTimeString();
   consoleSep();
-  consoleAppend(`=== ${studentName} — tested at ${ts} ===`, 'header');
-
-  // ── flip_card ──────────────────────────────────────────────────
-  consoleAppend('flip_card(hand, all_hands, cards, scores):', 'label');
-  consoleAppend('  hand.owner = ' + (td.hand && td.hand.owner || '?') + '  |  num-cards: ' + (td.hand ? CARD_NUMS.filter(k=>td.hand[k]===1).length : '?'), 'dim');
-  try {
-    const r = fn(td.hand, td.allHands, td.cards, td.scores);
-    consoleAppend('  → returned: ' + JSON.stringify(r), r===true||r===1 ? 'ok' : r===false||r===0 ? 'warn' : 'err');
-    consoleAppend('  ' + (r===true||r===1 ? '✓ FLIP — will draw a card' : '✓ HOLD — will not draw'), r===true||r===1 ? 'ok' : 'warn');
-  } catch(e) {
-    consoleAppend('  ✗ Error: ' + e.message, 'err');
-  }
+  consoleAppend('=== ' + studentName + ' — tested at ' + ts + ' ===', 'header');
 
   const validTargets = ['Player1','Bekah','Katie','Mary'];
+  const numCards = td.hand ? CARD_NUMS.filter(k=>td.hand[k]===1).length : '?';
+  consoleAppend('Inputs: hand.owner=' + (td.hand && td.hand.owner || '?') + ', num-cards=' + numCards + ', scores=' + JSON.stringify(td.scores), 'dim');
 
-  // ── received_frozen ────────────────────────────────────────────
-  if (fn._frozen_fn) {
+  // flip_card
+  runAndReport('flip_card(hand, all_hands, cards, scores)',
+    fn, [td.hand, td.allHands, td.cards, td.scores], null, srcCode);
+
+  // received_frozen
+  if (fn._frozen_fn && fn._frozen_fn._compileError) {
     consoleAppend('received_frozen(all_hands, scores):', 'label');
-    consoleAppend('  scores: ' + JSON.stringify(td.scores), 'dim');
-    try {
-      const r = fn._frozen_fn(td.allHands, td.scores);
-      const valid = validTargets.includes(r);
-      consoleAppend('  → returned: ' + JSON.stringify(r), valid ? 'result' : 'err');
-      consoleAppend('  ' + (valid ? '✓ Valid target — would freeze ' + r : '✗ Invalid! Must be one of: ' + validTargets.join(', ')), valid ? 'ok' : 'err');
-    } catch(e) {
-      consoleAppend('  ✗ Error: ' + e.message, 'err');
-    }
+    consoleAppend('  ✗ Compile error: ' + fn._frozen_fn._compileError, 'err');
+    reportCompileErrorLine(fn._frozen_fn._compileError, srcCode, fn._frozen_fn);
+  } else if (fn._frozen_fn) {
+    runAndReport('received_frozen(all_hands, scores)',
+      fn._frozen_fn, [td.allHands, td.scores], validTargets, srcCode);
   } else {
-    consoleAppend('received_frozen — not defined in this code', 'dim');
+    consoleAppend('received_frozen — not defined in code (optional)', 'dim');
   }
 
-  // ── received_flip3 ─────────────────────────────────────────────
-  if (fn._flip3_fn) {
+  // received_flip3
+  if (fn._flip3_fn && fn._flip3_fn._compileError) {
     consoleAppend('received_flip3(all_hands, scores):', 'label');
-    consoleAppend('  scores: ' + JSON.stringify(td.scores), 'dim');
-    try {
-      const r = fn._flip3_fn(td.allHands, td.scores);
-      const valid = validTargets.includes(r);
-      consoleAppend('  → returned: ' + JSON.stringify(r), valid ? 'result' : 'err');
-      consoleAppend('  ' + (valid ? '✓ Valid target — would flip 3 onto ' + r : '✗ Invalid! Must be one of: ' + validTargets.join(', ')), valid ? 'ok' : 'err');
-    } catch(e) {
-      consoleAppend('  ✗ Error: ' + e.message, 'err');
-    }
+    consoleAppend('  ✗ Compile error: ' + fn._flip3_fn._compileError, 'err');
+    reportCompileErrorLine(fn._flip3_fn._compileError, srcCode);
+  } else if (fn._flip3_fn) {
+    runAndReport('received_flip3(all_hands, scores)',
+      fn._flip3_fn, [td.allHands, td.scores], validTargets, srcCode);
   } else {
-    consoleAppend('received_flip3 — not defined in this code', 'dim');
+    consoleAppend('received_flip3 — not defined in code (optional)', 'dim');
   }
 }
 
@@ -3438,11 +4095,15 @@ function randomizeTestData() {
 }
 
 function getTestData() {
+  const parseErrors = [];
   function safeParse(id, fallback) {
     const el = document.getElementById(id);
     if (!el || !el.value.trim()) return fallback;
     try { return JSON.parse(el.value); }
-    catch(e) { return fallback; }
+    catch(e) {
+      parseErrors.push(id + ': ' + e.message);
+      return null; // null signals parse failure
+    }
   }
   const names = getNames();
   const defHand   = publicHand(buildRandomTestHand(names[1] || 'Bekah'));
@@ -3450,12 +4111,14 @@ function getTestData() {
   const defScores = {}; names.forEach((nm,i) => defScores[nm] = i * 17);
   const defCards  = emptyPlayedCards();
 
-  return {
+  const result = {
     hand:     safeParse('test-hand',      defHand),
     allHands: safeParse('test-all-hands', defAH),
     scores:   safeParse('test-scores',    defScores),
     cards:    safeParse('test-cards',     defCards),
+    _errors:  parseErrors,
   };
+  return result;
 }
 
 // Add line numbers to transpiled JS for error display
@@ -3505,6 +4168,18 @@ function extractErrorLine(errMsg) {
   return null;
 }
 
+
+// Render an avatar: try the image file, fallback to initial circle
+function avatarHTML(name, size) {
+  const cls = size === 'sm' ? 'avatar-sm' : '';
+  const initial = (name || '?')[0].toUpperCase();
+  // Color each player distinctively
+  const colors = { 'Player1': '#39ff6e', 'Bekah': '#c9a84c', 'Katie': '#5599ff', 'Mary': '#cc55ff' };
+  const col = colors[name] || 'var(--gold)';
+  return `<img class="avatar ${cls}" src="${name}.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" loading="lazy">` +
+         `<div class="avatar-fallback ${cls}" style="display:none;color:${col};border-color:${col}40;">${initial}</div>`;
+}
+
 window.onload = () => {
   const sampleDeck = buildDeck();
   document.getElementById('deck-count').textContent = sampleDeck.length;
@@ -3519,11 +4194,11 @@ window.onload = () => {
     points = 0
     for x in range(13):
         points += hand[str(x)] * x
-    my_score = scores["Bekah"]
     if points > 25:
         return False
     else:
         return True
+
 def received_frozen(all_hands, scores):
     high_score = 0
     high_name = ""
@@ -3542,6 +4217,7 @@ def received_frozen(all_hands, scores):
     if high_name == "Bekah":
         high_name = high_name2
     return high_name
+
 def received_flip3(all_hands, scores):
     most_cards = 0
     most_name = ""
@@ -3570,6 +4246,7 @@ def received_flip3(all_hands, scores):
                 most_cards = num_cards
                 most_name = hands["owner"]
     if most_name == "Bekah":
+        print("I have the most cards")
         if mary_cards >= katie_cards:
             most_name = "Mary"
         elif katie_cards > mary_cards:
@@ -3581,7 +4258,9 @@ def received_flip3(all_hands, scores):
     points = 0
     for x in range(13):
         points += hand[str(x)] * x
-    if points > 25:
+    if hand["second_chance"] > 0:
+        answer = True
+    elif points > 25:
         return False
     elif hand["12"] == 1 and hand["11"] == 1:
         answer = False
@@ -3598,23 +4277,29 @@ def received_flip3(all_hands, scores):
     return answer
 
 def received_frozen(all_hands, scores):
-    result = ""
+    result = "Player1"
     score = 0
     for x, y in scores.items():
-        if y >= score:
+        if x == "Katie":
+            score = score
+            result = result
+        elif y >= score:
             score = y
             result = x
     return result
 
 def received_flip3(all_hands, scores):
     most_cards = 0
-    most_name = ""
-    for h in all_hands:
+    most_name = "Player1"
+    for h in all_hands:  
         name = h["owner"]
         num_cards = 0
         for x in range(13):
             num_cards += h[str(x)]
-        if num_cards > most_cards:
+        if name == "Katie":
+            most_cards = most_cards
+            most_name = most_name
+        elif num_cards > most_cards:
             most_cards = num_cards
             most_name = name
     return most_name
@@ -3622,44 +4307,65 @@ def received_flip3(all_hands, scores):
     `def flip_card(hand, all_hands, cards, scores):
     pick = False
     my_hand = hand
-    if my_hand["12"] == 1 and my_hand["11"] == 1 and my_hand["10"] == 1:
+    if my_hand["12"] == 1 and my_hand["11"] == 1:
         pick = False
-    elif my_hand["10"] == 1 and my_hand["9"] == 1 and my_hand["11"] == 1:
+    elif my_hand["10"] == 1 and my_hand["11"] == 1:
         pick = False
     else:
         pick = True
     score = 0
     for x in range(13):
         score += hand[str(x)] * x
-        if score > 20:
+        if score > 30:
             pick = False
+    if hand["second_chance"] != 0:
+        pick = True
     return pick
 
 def received_frozen(all_hands, scores):
     highest_score = 0
     high_name = ""
     for x, y in scores.items():
-        if scores[x] > highest_score:
-            highest_score = scores[x]
-            high_name = x
+        if x == "Mary":
+            high_name = "Player1"
+        else:
+            if scores[x] > highest_score:
+                highest_score = scores[x]
+                high_name = x
     return high_name
 
 def received_flip3(all_hands, scores):
     highest_score = 0
     high_name = ""
-    for x, y in scores.items():
-        if scores[x] > highest_score:
-            highest_score = scores[x]
-            high_name = x
+    if scores["Mary"] < 10:
+        return "Mary"
+    else:
+        for x, y in scores.items():
+            if x == "Mary":
+                high_name = "Player1"
+            else:
+                if scores[x] > highest_score:
+                    highest_score = scores[x]
+                    high_name = x
     return high_name
 `
-  ];
-  for (let i = 0; i < 3; i++) {
+  ];  for (let i = 0; i < 3; i++) {
     const ta = document.getElementById('code-' + i);
     if (ta && !ta.value.trim()) ta.value = defaultCodes[i];
   }
   randomizeTestData();
-  for (let i = 0; i < 3; i++) { updateLineNumbers(i); testCode(i); }
+  // Render avatars
+  const avatarDefs = [
+    { id: 'human-avatar-wrap',  name: 'Player1' },
+    { id: 'bekah-avatar-wrap',  name: 'Bekah', sm: true },
+    { id: 'katie-avatar-wrap',  name: 'Katie', sm: true },
+    { id: 'mary-avatar-wrap',   name: 'Mary',  sm: true },
+  ];
+  avatarDefs.forEach(({ id, name, sm }) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = avatarHTML(name, sm ? 'sm' : '');
+  });
+  for (let i = 0; i < 4; i++) { updateLineNumbers(i); testCode(i); }
 };
 </script>
 </body>
