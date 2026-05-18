@@ -2485,6 +2485,12 @@ function compilePythonToJS(rawCode) {
     /\bfor\s+(\w+)\s+in\s+range\(\s*(\w+|\d+)\s*,\s*(\w+|\d+)\s*,\s*(-?\w+|-?\d+)\s*\)\s*:/g,
     'for (let $1 = $2; $1 < $3; $1 += $4):'
   );
+  // for x in <iterable>:  (a plain list/array, NOT range — those are handled above)
+  // Must run before the `x in y` membership rewrite so it isn't corrupted.
+  js = js.replace(
+    /\bfor\s+(\w+)\s+in\s+([A-Za-z_$][\w$]*(?:\[[^\]]+\])?(?:\.[A-Za-z_$][\w$]*)*)\s*:/g,
+    'for (const $1 of $2):'
+  );
 
   // STEP 7: Dict/list methods
   js = js.replace(/\.items\(\)/g, '.entries()');
@@ -2548,12 +2554,15 @@ function compilePythonToJS(rawCode) {
   js = js.replace(/\bNone\b/g,  'null');
   js = js.replace(/\band\b/g,   '&&');
   js = js.replace(/\bor\b/g,    '||');
-  // 'x not in y' → '!y.includes(x)'  — MUST run before the bare 'not' rule below
-  js = js.replace(/\b(\w+)\s+not\s+in\s+(\w+)(?!\s*:)/g, (m,a,b) => '!'+b+'.includes('+a+')');
+  // 'x not in y' → '!y.includes(x)'  — MUST run before the bare 'not' rule below.
+  // The (?![\w:]) after \w+ stops the regex backtracking into a partial word
+  // (e.g. matching 'all_hand' out of 'all_hands:') and also skips for-loop colons.
+  js = js.replace(/\b(\w+)\s+not\s+in\s+(\w+)(?![\w:])/g, (m,a,b) => '!'+b+'.includes('+a+')');
   js = js.replace(/\bnot\s+([(\w])/g, '!$1');
   js = js.replace(/\belif\s+/g, 'else if ');
-  // 'x in list' → 'list.includes(x)' (only in conditions, not for loops)
-  js = js.replace(/\b(\w+)\s+in\s+(\w+)(?!\s*:)/g, (m,a,b) => b+'.includes('+a+')');
+  // 'x in list' → 'list.includes(x)'. (?![\w:]) prevents matching a partial
+  // identifier and prevents touching `for ... in ...:` loops (already converted).
+  js = js.replace(/\b(\w+)\s+in\s+(\w+)(?![\w:])/g, (m,a,b) => b+'.includes('+a+')');
 
   // STEP 10: Indentation → braces
   js = convertIndentToBlocks(js);
@@ -2692,7 +2701,7 @@ function extractPythonFn(rawCode, fnName, paramNames) {
       (_, kw, val, cond, other) => `${kw} (${cond}) ? (${val}) : (${other})`);
     js = js.replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
     js = js.replace(/\band\b/g,'&&').replace(/\bor\b/g,'||');
-    js = js.replace(/\b(\w+)\s+not\s+in\s+(\w+)(?!\s*:)/g, function(m,a,b){ return '!'+b+'.includes('+a+')'; });
+    js = js.replace(/\b(\w+)\s+not\s+in\s+(\w+)(?![\w:])/g, function(m,a,b){ return '!'+b+'.includes('+a+')'; });
     js = js.replace(/\bnot\s+([\(\w])/g,'!$1');
     js = js.replace(/\belif\s+/g,'else if ');
 
